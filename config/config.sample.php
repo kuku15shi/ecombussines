@@ -5,7 +5,11 @@
  */
 
 // --- Database Credentials ---
+define('DB_HOST_VAL', 'localhost');
+define('DB_USER_VAL', 'root');
 define('DB_PASSWORD_VAL', '');
+define('DB_NAME_VAL', 'ecombusiness');
+
 
 // --- Razorpay API ---
 define('RAZORPAY_KEY_ID_VAL', 'YOUR_RAZORPAY_KEY');

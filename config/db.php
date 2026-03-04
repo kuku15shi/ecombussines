@@ -1,14 +1,21 @@
 <?php
-require_once __DIR__ . '/config.php'; // Load secrets
+require_once __DIR__ . '/config.php'; // Load secrets via config.php
 
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
+define('DB_HOST', DB_HOST_VAL);
+define('DB_USER', DB_USER_VAL);
 define('DB_PASS', DB_PASSWORD_VAL); 
-define('DB_NAME', 'ecombusiness');
+define('DB_NAME', DB_NAME_VAL);
+
 define('SITE_NAME', 'LuxeStore');
+
+// Dynamic SITE_URL Detection
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-define('SITE_URL', "$protocol://$host/ecombusiness");
+// Automatically detect if we are in /ecombusiness (Local) or root (InfinityFree)
+$scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+$basePath = ($scriptPath === '/') ? '' : rtrim($scriptPath, '/');
+define('SITE_URL', "$protocol://$host$basePath");
+
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');
 define('UPLOAD_URL', SITE_URL . '/uploads/');
 define('GST_PERCENT', 0);
