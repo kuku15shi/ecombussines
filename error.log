@@ -1,0 +1,183 @@
+[02-Mar-2026 05:50:36 Europe/Berlin] PHP Fatal error:  Uncaught Error: Call to undefined method mysqli_result::fetchAll() in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php:4
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\includes\navbar.php(6): getCategories(Object(mysqli))
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\index.php(41): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 4
+[03-Mar-2026 17:12:52 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 35
+[03-Mar-2026 17:12:52 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $slug is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 42
+[03-Mar-2026 17:12:52 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 49
+[03-Mar-2026 17:12:52 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 56
+[03-Mar-2026 17:12:52 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $excludeId is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 182
+[03-Mar-2026 17:12:57 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 35
+[03-Mar-2026 17:12:57 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $slug is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 42
+[03-Mar-2026 17:12:57 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 49
+[03-Mar-2026 17:12:57 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 56
+[03-Mar-2026 17:12:57 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $excludeId is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 182
+[03-Mar-2026 17:13:03 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 35
+[03-Mar-2026 17:13:03 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $slug is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 42
+[03-Mar-2026 17:13:03 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 49
+[03-Mar-2026 17:13:03 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 56
+[03-Mar-2026 17:13:03 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $excludeId is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 182
+[03-Mar-2026 17:13:22 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 35
+[03-Mar-2026 17:13:22 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $slug is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 42
+[03-Mar-2026 17:13:22 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 49
+[03-Mar-2026 17:13:22 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 56
+[03-Mar-2026 17:13:22 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $excludeId is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 182
+[03-Mar-2026 17:13:23 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 35
+[03-Mar-2026 17:13:23 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $slug is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 42
+[03-Mar-2026 17:13:23 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 49
+[03-Mar-2026 17:13:23 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $product_id is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 56
+[03-Mar-2026 17:13:23 Europe/Berlin] PHP Deprecated:  Optional parameter $db declared before required parameter $excludeId is implicitly treated as a required parameter in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 182
+[03-Mar-2026 17:33:39 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\order_success.php on line 73
+[03-Mar-2026 17:33:39 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\order_success.php on line 73
+[03-Mar-2026 17:33:39 Europe/Berlin] PHP Deprecated:  ucfirst(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\order_success.php on line 73
+[03-Mar-2026 17:41:42 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\track_order.php on line 72
+[03-Mar-2026 17:41:42 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\track_order.php on line 72
+[03-Mar-2026 17:41:42 Europe/Berlin] PHP Deprecated:  ucfirst(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\track_order.php on line 72
+[03-Mar-2026 17:41:42 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\track_order.php on line 79
+[03-Mar-2026 17:43:02 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 74
+[03-Mar-2026 17:43:02 Europe/Berlin] PHP Deprecated:  strtoupper(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 74
+[03-Mar-2026 17:43:02 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 96
+[03-Mar-2026 17:43:02 Europe/Berlin] PHP Deprecated:  ucfirst(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 96
+[03-Mar-2026 17:43:02 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 133
+[03-Mar-2026 17:44:42 Europe/Berlin] PHP Warning:  Undefined array key "status" in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 96
+[03-Mar-2026 17:44:42 Europe/Berlin] PHP Deprecated:  ucfirst(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\invoice.php on line 96
+[03-Mar-2026 17:48:12 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php:11
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(11): PDO->query('SELECT COALESCE...')
+#1 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php on line 11
+[03-Mar-2026 17:49:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:49:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:53 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:53 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:56 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:57 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:57 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:57 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:58 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:58 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:58 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:51:59 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:52:00 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:52:01 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:54:33 Europe/Berlin] CSRF validation failed for user_id: Guest
+[03-Mar-2026 17:55:05 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\index.php(53): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:55:22 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\orders.php(72): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 17:55:27 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'status' in 'where clause' in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php:28
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php(28): mysqli->query('SELECT COUNT(*)...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\products.php(232): include('C:\\Users\\VICTUS...')
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\includes\sidebar.php on line 28
+[03-Mar-2026 18:06:30 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 104
+[03-Mar-2026 18:06:30 Europe/Berlin] PHP Warning:  Undefined variable $q_raw in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 121
+[03-Mar-2026 18:06:57 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 104
+[03-Mar-2026 18:06:57 Europe/Berlin] PHP Warning:  Undefined variable $q_raw in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 121
+[03-Mar-2026 18:07:06 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 104
+[03-Mar-2026 18:07:06 Europe/Berlin] PHP Warning:  Undefined variable $q_raw in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 121
+[03-Mar-2026 18:07:07 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 104
+[03-Mar-2026 18:07:07 Europe/Berlin] PHP Warning:  Undefined variable $q_raw in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 121
+[03-Mar-2026 18:08:20 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 104
+[03-Mar-2026 18:08:20 Europe/Berlin] PHP Warning:  Undefined variable $q_raw in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 121
+[03-Mar-2026 18:26:10 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 104
+[03-Mar-2026 18:26:10 Europe/Berlin] PHP Warning:  Undefined variable $q_raw in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\products.php on line 121

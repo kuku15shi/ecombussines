@@ -1,0 +1,24 @@
+# Config
+config/config.php
+
+
+# XAMPP/PHP specific
+.htaccess
+.htaccess.bak
+
+# Uploads (optional: ignore actual files but keep folder)
+uploads/products/*
+uploads/videos/*
+uploads/models/*
+uploads/variants/*
+uploads/size_charts/*
+!uploads/.gitkeep
+
+# DB backups
+*.sql
+*.bak
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
