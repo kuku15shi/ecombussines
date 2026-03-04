@@ -1,9 +1,0 @@
-[2026-03-02 17:08:25] Webhook Hit! Method: HEAD Query: 
-[2026-03-02 17:21:02] Webhook Hit! Method: GET Query: 
-[2026-03-02 17:25:50] Webhook Hit! Method: GET Query: hub.mode=subscribe&hub.challenge=744838787&hub.verify_token=LuxeStoreWebHook2026&hub_mode=subscribe&hub_challenge=744838787&hub_verify_token=LuxeStoreWebHook2026
-[2026-03-03 10:05:16] Webhook Hit! Method: GET Query: hub.mode=subscribe&hub.challenge=31046491&hub.verify_token=LuxeStoreWebHook2026&hub_mode=subscribe&hub_challenge=31046491&hub_verify_token=LuxeStoreWebHook2026
-[2026-03-03 10:12:18] Webhook Hit! Method: GET Query: hub.mode=subscribe&hub.challenge=143054983&hub.verify_token=LuxeStoreWebHook2026&hub_mode=subscribe&hub_challenge=143054983&hub_verify_token=LuxeStoreWebHook2026
-[2026-03-03 10:16:35] Webhook Hit! Method: POST Query: 
-[2026-03-03 10:17:40] Webhook Hit! Method: POST Query: 
-[2026-03-03 10:17:40] Webhook Hit! Method: POST Query: 
-[2026-03-03 10:18:07] Webhook Hit! Method: POST Query: 
