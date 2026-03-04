@@ -16,9 +16,12 @@ uploads/variants/*
 uploads/size_charts/*
 !uploads/.gitkeep
 
-# DB backups
-*.sql
-*.bak
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
 
 # OS files
 Thumbs.db
