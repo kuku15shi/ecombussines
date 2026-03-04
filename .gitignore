@@ -1,5 +1,7 @@
 # Config
 config/config.php
+ignore/
+
 
 
 # XAMPP/PHP specific
