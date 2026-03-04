@@ -5,8 +5,8 @@ ignore/
 
 
 # XAMPP/PHP specific
-.htaccess
 .htaccess.bak
+
 
 # Uploads (optional: ignore actual files but keep folder)
 uploads/products/*

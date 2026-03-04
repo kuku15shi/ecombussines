@@ -1,0 +1,21 @@
+RewriteEngine On
+# RewriteBase /ecombusiness/
+
+
+# 1. Product Slug
+RewriteRule ^product/([^/]+)/?$ product.php?slug=$1 [L,QSA]
+
+# 2. Category Slug
+RewriteRule ^category/([^/]+)/?$ products.php?category=$1 [L,QSA]
+
+# 3. Order Related Rewrites
+RewriteRule ^order/([^/]+)/track/?$ track_order.php?order=$1 [L,QSA]
+RewriteRule ^order/([^/]+)/payment/?$ payment.php?order=$1 [L,QSA]
+RewriteRule ^order/([^/]+)/invoice/?$ invoice.php?order=$1 [L,QSA]
+RewriteRule ^order/([^/]+)/success/?$ order_success.php?order=$1 [L,QSA]
+
+# 4. Extension Hiding (Internal Rewrite)
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [L,QSA]

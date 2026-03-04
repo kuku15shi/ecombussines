@@ -45,6 +45,8 @@ if (!isset($pdo)) {
     }
 }
 
+
+
 // 5. CSRF Protection System
 function getCsrfToken() {
     if (empty($_SESSION['csrf_token'])) {
