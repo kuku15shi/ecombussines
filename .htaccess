@@ -12,6 +12,7 @@ RewriteRule ^order/([^/]+)/track/?$ track_order.php?order=$1 [L,QSA]
 RewriteRule ^order/([^/]+)/payment/?$ payment.php?order=$1 [L,QSA]
 RewriteRule ^order/([^/]+)/invoice/?$ invoice.php?order=$1 [L,QSA]
 RewriteRule ^order/([^/]+)/success/?$ order_success.php?order=$1 [L,QSA]
+RewriteRule ^order/([^/]+)/verify_payment(\.php)?$ verify_payment.php?order=$1 [L,QSA]
 
 # 4. Extension Hiding (Remove .php from URL)
 RewriteCond %{REQUEST_FILENAME} !-d

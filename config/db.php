@@ -9,11 +9,22 @@ define('DB_NAME', DB_NAME_VAL);
 define('SITE_NAME', 'LuxeStore');
 
 // Dynamic SITE_URL Detection
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? "https" : "http";
+$protocol = (
+    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || 
+    (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+    (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
+) ? "https" : "http";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-// Automatically detect if we are in /ecombusiness (Local) or root (InfinityFree)
-$scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-$basePath = ($scriptPath === '/') ? '' : rtrim($scriptPath, '/');
+
+// Calculate the base path relative to the currently executing script
+// This works whether we are in index.php or admin/login.php
+$projectRoot = str_replace('\\', '/', realpath(__DIR__ . '/..'));
+$execFile = str_replace('\\', '/', realpath($_SERVER['SCRIPT_FILENAME'] ?? ''));
+$relPath = str_replace($projectRoot, '', $execFile);
+$scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+$basePath = substr($scriptName, 0, strlen($scriptName) - strlen($relPath));
+$basePath = rtrim($basePath, '/');
+
 define('SITE_URL', "$protocol://$host$basePath");
 
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');

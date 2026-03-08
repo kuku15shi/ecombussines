@@ -58,11 +58,12 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:2fr 1fr; gap:1.5rem; align-items:start;">
+      <div class="admin-grid-2-1">
         <div style="display:flex; flex-direction:column; gap:1.25rem;">
           <!-- Items -->
           <div class="data-table-card">
             <div class="data-table-header"><div class="data-table-title">Items Ordered</div></div>
+            <div class="table-responsive">
             <table class="admin-table">
               <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Discount</th><th class="text-right">Total</th></tr></thead>
               <tbody>
@@ -92,11 +93,12 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
                 <?php endforeach; ?>
               </tbody>
             </table>
+            </div>
           </div>
           <!-- Customer -->
           <div class="form-card">
             <div style="font-weight:700; margin-bottom:1rem;">Customer & Delivery Info</div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+            <div class="admin-grid-half">
               <div><div style="font-size:0.75rem; color:var(--text-muted);">Name</div><div style="font-weight:600;"><?= htmlspecialchars($order['name']) ?></div></div>
               <div><div style="font-size:0.75rem; color:var(--text-muted);">Email</div><div style="font-weight:600;"><?= htmlspecialchars($order['email']) ?></div></div>
               <div><div style="font-size:0.75rem; color:var(--text-muted);">Phone</div><div style="font-weight:600;"><?= htmlspecialchars($order['phone']) ?></div></div>

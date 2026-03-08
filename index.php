@@ -106,7 +106,7 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
 
     <!-- Categories Scroller (Mobile Only) -->
     <div class="d-md-none scroller-wrapper">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5rem; padding:0 0.25rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; padding:0 0.25rem;">
         <h3 style="font-size:1.15rem; font-weight:800; margin:0; letter-spacing:-0.5px;">Categories</h3>
         <a href="products" style="font-size:0.85rem; color:var(--primary); text-decoration:none; font-weight:700;">View All</a>
       </div>
@@ -128,23 +128,23 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
     </div>
 
     <!-- STATS BAR -->
-    <div class="mobile-stats-scroller d-md-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin:2rem 0;">
+    <div class="grid-4" style="margin:1.5rem 0; gap:0.75rem;">
       <?php
       $stats = [
-        ['icon'=>'bi-truck','label'=>'Free Shipping','sub'=>'On orders above ₹999'],
+        ['icon'=>'bi-truck','label'=>'Free Shipping','sub'=>'Orders over ₹999'],
         ['icon'=>'bi-shield-check','label'=>'Secure Payment','sub'=>'100% safe & protected'],
-        ['icon'=>'bi-arrow-counterclockwise','label'=>'Easy Returns','sub'=>'30-day return policy'],
-        ['icon'=>'bi-headset','label'=>'24/7 Support','sub'=>'Always here to help'],
+        ['icon'=>'bi-arrow-counterclockwise','label'=>'Easy Returns','sub'=>'30-day policy'],
+        ['icon'=>'bi-headset','label'=>'24/7 Support','sub'=>'Help available'],
       ];
       foreach($stats as $s):
       ?>
-      <div class="glass-card mobile-stats-item" style="padding:1.25rem; display:flex; align-items:center; gap:0.875rem;">
-        <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(108,99,255,0.2),rgba(255,101,132,0.2));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="<?= $s['icon'] ?>" style="font-size:1.2rem;color:var(--primary);"></i>
+      <div class="glass-card mobile-stats-item" style="padding:1rem; display:flex; flex-direction:column; align-items:center; text-align:center; gap:0.5rem;">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(255,101,132,0.15));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="<?= $s['icon'] ?>" style="font-size:1.1rem;color:var(--primary);"></i>
         </div>
         <div>
-          <div style="font-weight:700;font-size:0.85rem;color:var(--text-primary);"><?= $s['label'] ?></div>
-          <div style="font-size:0.72rem;color:var(--text-muted);"><?= $s['sub'] ?></div>
+          <div style="font-weight:700;font-size:0.8rem;color:var(--text-primary);"><?= $s['label'] ?></div>
+          <div style="font-size:0.65rem;color:var(--text-muted);"><?= $s['sub'] ?></div>
         </div>
       </div>
       <?php endforeach; ?>
@@ -157,7 +157,7 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
         <h2 class="section-title">Shop by Category</h2>
         <p class="section-sub">Find exactly what you're looking for</p>
       </div>
-      <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:1rem;">
+      <div class="category-grid">
         <?php foreach($categories as $cat): ?>
         <a href="category/<?= $cat['slug'] ?>" class="category-card">
           <div class="category-icon">

@@ -86,13 +86,13 @@ for(let i=0;i<30;i++){
         <div style="font-weight:700; margin-bottom:1rem;">Items Ordered (<?= count($items) ?>)</div>
         <div style="display:flex; flex-direction:column; gap:0.75rem;">
           <?php foreach($items as $item): ?>
-          <div style="display:flex; gap:1rem; align-items:center; background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-sm); padding:0.875rem;">
-            <img src="<?= UPLOAD_URL . $item['product_image'] ?>" onerror="this.src='<?= SITE_URL ?>/assets/img/default_product.jpg'" style="width:56px; height:56px; border-radius:var(--radius-sm); object-fit:cover;" alt="">
-            <div style="flex:1;">
-              <div style="font-weight:600;"><?= htmlspecialchars($item['product_name']) ?></div>
-              <div style="font-size:0.8rem; color:var(--text-muted);">Qty: <?= $item['quantity'] ?> × <?= formatPrice($item['price']) ?></div>
+          <div style="display:flex; gap:1.25rem; align-items:flex-start; background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-sm); padding:1rem;">
+            <img src="<?= UPLOAD_URL . $item['product_image'] ?>" onerror="this.src='<?= SITE_URL ?>/assets/img/default_product.jpg'" style="width:64px; height:64px; border-radius:var(--radius-sm); object-fit:cover; flex-shrink:0; border:1px solid var(--glass-border);" alt="">
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; line-height:1.4; margin-bottom:0.25rem; font-size:0.95rem; color:var(--text-primary);"><?= htmlspecialchars($item['product_name']) ?></div>
+              <div style="font-size:0.85rem; color:var(--text-muted); font-weight:500;">Qty: <?= $item['quantity'] ?> × <?= formatPrice($item['price']) ?></div>
             </div>
-            <div style="font-weight:800;"><?= formatPrice($item['total']) ?></div>
+            <div style="font-weight:900; font-size:1.1rem; white-space:nowrap; margin-left:0.75rem; color:var(--text-primary); text-align:right;"><?= formatPrice($item['total']) ?></div>
           </div>
           <?php endforeach; ?>
         </div>

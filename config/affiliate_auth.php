@@ -12,14 +12,16 @@ function requireAffiliateLogin() {
     }
 }
 
-function getCurrentAffiliate($conn) {
+function getCurrentAffiliate($conn = null) {
+    if (!$conn) { global $conn; }
     if (!isAffiliateLoggedIn()) return null;
     $id = (int)$_SESSION['affiliate_id'];
     $res = $conn->query("SELECT * FROM affiliates WHERE id = $id");
     return $res ? $res->fetch_assoc() : null;
 }
 
-function generateAffiliateReferralCode($conn, $name) {
+function generateAffiliateReferralCode($name, $conn = null) {
+    if (!$conn) { global $conn; }
     $base = strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', $name));
     $base = substr($base, 0, 5);
     $code = $base . rand(100, 999);

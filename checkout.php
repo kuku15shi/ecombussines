@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $final_total = $total + $cod_fee;
 
             $stmt = $pdo->prepare("INSERT INTO orders (order_number,user_id,name,email,phone,address,city,state,pincode,subtotal,discount,shipping,gst,cod_fee,total,coupon_code,payment_method,payment_status,order_status,notes) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
-            $initial_status = ($payment === 'cod') ? 'confirmed' : 'pending';
+            $initial_status = 'pending'; // Change: Always start as pending for COD verification
             $stmt->execute([$orderNum, $uid, $name, $email, $phone, $address, $city, $state, $pincode, $subtotal, $discount, $shipping, $gst, $cod_fee, $final_total, $couponCode, $payment, $payment_status, $initial_status, $notes]);
             $orderId = $pdo->lastInsertId();
 
@@ -90,14 +90,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($payment === 'cod') {
                 require_once __DIR__ . '/includes/whatsapp_functions.php';
                 
-                // Send WhatsApp Confirmation
+                // Get Product Names for the message
+                $pNames = [];
+                foreach($cartItems as $item) {
+                    $pNames[] = $item['product']['name'];
+                }
+                $pSummary = implode(', ', $pNames);
+                if(strlen($pSummary) > 40) $pSummary = substr($pSummary,0,37) . '...';
+
+                // Use template for first message (Meta rule)
                 $templateData = [
                     ["type" => "text", "text" => $name],
-                    ["type" => "text", "text" => $orderNum],
+                    ["type" => "text", "text" => $orderNum . " (" . $pSummary . ")"],
                     ["type" => "text", "text" => formatPrice($final_total)],
                     ["type" => "text", "text" => "Cash on Delivery"],
-                    ["type" => "text", "text" => "3-5 Business Days"]
+                    ["type" => "text", "text" => "Reply: 1 Confirm, 2 Cancel, 3 Support"]
                 ];
+                
                 sendWhatsAppMessage($phone, '', 'template', 'order_confirmation', $templateData, $orderId);
 
                 recordAffiliateCommission($orderId, $final_total);
@@ -170,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h3 style="font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.6rem;">
               <i class="bi bi-person-circle" style="color:var(--primary);"></i> Personal Information
             </h3>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+            <div class="grid-2">
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Full Name *</label>
                 <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($currentUser['name']) ?>" required>
@@ -191,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h3 style="font-weight:800; margin-bottom:1.25rem; display:flex; align-items:center; gap:0.6rem;">
               <i class="bi bi-geo-alt" style="color:var(--primary);"></i> Shipping Address
             </h3>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+            <div class="grid-2">
               <div class="form-group" style="margin-bottom:0; grid-column:1/-1;">
                 <label class="form-label">Street Address *</label>
                 <textarea name="address" class="form-control" rows="2" placeholder="House/Flat No., Street, Area" required><?= htmlspecialchars($currentUser['address'] ?? '') ?></textarea>

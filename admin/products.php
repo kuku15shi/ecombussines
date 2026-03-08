@@ -243,7 +243,7 @@ $action = $_GET['action'] ?? '';
       <!-- ADD / EDIT FORM -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
         <h2 style="font-weight:800; font-size:1.3rem;"><?= $action==='edit'?'✏️ Edit Product':'➕ Add New Product' ?></h2>
-        <a href="products.php" class="btn-primary" style="background:var(--glass); color:var(--text); border:1px solid var(--glass-border);"><i class="bi bi-arrow-left"></i> Back</a>
+        <a href="products.php" class="btn-primary" style="background:var(--glass); color:var(--text-primary); border:1px solid var(--glass-border);"><i class="bi bi-arrow-left"></i> Back</a>
       </div>
       <form method="POST" enctype="multipart/form-data">
         <?= csrfField() ?>
@@ -425,7 +425,7 @@ $action = $_GET['action'] ?? '';
             <input type="text" name="search" class="filter-input" placeholder="🔍 Search products..." value="<?= htmlspecialchars($search) ?>" style="flex:1; min-width:200px;">
             <select name="cat" class="filter-input"><option value="">All Categories</option><?php foreach($categories as $c): ?><option value="<?= $c['id'] ?>" <?= $catFilter==$c['id']?'selected':'' ?>><?= htmlspecialchars($c['name']) ?></option><?php endforeach; ?></select>
             <button type="submit" class="btn-primary btn-sm"><i class="bi bi-funnel"></i> Filter</button>
-            <?php if($search || $catFilter): ?><a href="products.php" class="btn-primary btn-sm" style="background:var(--glass); color:var(--text); border:1px solid var(--glass-border);">✕ Clear</a><?php endif; ?>
+            <?php if($search || $catFilter): ?><a href="products.php" class="btn-primary btn-sm" style="background:var(--glass); color:var(--text-primary); border:1px solid var(--glass-border);">✕ Clear</a><?php endif; ?>
           </form>
         </div>
       </div>

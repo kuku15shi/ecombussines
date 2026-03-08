@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <button type="button" class="toggle-pw" onclick="togglePw('loginPw',this)"><i class="bi bi-eye"></i></button>
           </div>
         </div>
-        <button type="submit" name="login" class="btn-primary" style="width:100%; justify-content:center; padding:0.875rem; font-size:1rem; margin-top:0.5rem;">
+        <button type="submit" name="login" class="btn-primary-luxury" style="width:100%; justify-content:center; padding:1rem; font-size:1.05rem; margin-top:0.5rem; border-radius: 12px;">
           <i class="bi bi-box-arrow-in-right"></i> Sign In to Account
         </button>
       </form>
@@ -185,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
           </div>
         </div>
-        <button type="submit" name="register" class="btn-primary" style="width:100%; justify-content:center; padding:0.875rem; font-size:1rem; margin-top:0.5rem;">
+        <button type="submit" name="register" class="btn-primary-luxury" style="width:100%; justify-content:center; padding:1rem; font-size:1.05rem; margin-top:0.5rem; border-radius: 12px;">
           <i class="bi bi-person-plus"></i> Create Account
         </button>
       </form>
@@ -193,8 +193,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     <div class="divider">OR</div>
 
-    <button onclick="simulateGoogleLogin(event)" class="btn-primary-luxury google-btn-mock" style="width:100%; justify-content:center; padding:0.875rem; font-size:1rem; margin-top:0.5rem; background:#fff; color:#444; border:1px solid #ddd; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48" style="margin-right:10px;">
+    <button onclick="simulateGoogleLogin(event)" class="google-btn-mock" style="width:100%; justify-content:center; padding:1rem; font-size:1rem; margin-top:0.5rem; background:#fff !important; color:#333 !important; border:1px solid #e0e0e0 !important; border-radius:12px; font-weight:700; display:flex; align-items:center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48" style="margin-right:12px;">
           <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
           <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
           <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>

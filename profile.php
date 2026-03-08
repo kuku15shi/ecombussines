@@ -74,7 +74,7 @@ $wishlist = $stmtWl->fetchAll();
           <div style="font-weight:800; font-size:1.1rem;"><?= htmlspecialchars($currentUser['name']) ?></div>
           <div style="color:var(--text-muted); font-size:0.85rem;"><?= $currentUser['email'] ?></div>
           <div style="color:var(--text-muted); font-size:0.8rem; margin-top:0.25rem;">Member since <?= date('M Y', strtotime($currentUser['created_at'])) ?></div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:1.5rem;">
+          <div class="grid-2" style="gap:0.75rem; margin-top:1.5rem;">
             <a href="orders" style="background:var(--glass); border:1px solid var(--glass-border); border-radius:var(--radius-sm); padding:0.875rem; text-decoration:none; text-align:center; transition:var(--transition);">
               <div style="font-size:1.5rem; font-weight:800; color:var(--primary);">
                 <?php
@@ -99,7 +99,7 @@ $wishlist = $stmtWl->fetchAll();
           <h3 style="font-weight:800; margin-bottom:1.5rem;">Edit Profile</h3>
           <form method="POST">
             <?= csrfField() ?>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+            <div class="grid-2">
               <div class="form-group" style="margin-bottom:0;grid-column:1/-1;"><label class="form-label">Full Name</label><input type="text" name="name" class="form-control" value="<?= htmlspecialchars($currentUser['name']) ?>" required></div>
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">Phone</label><input type="tel" name="phone" class="form-control" value="<?= htmlspecialchars($currentUser['phone'] ?? '') ?>"></div>
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">City</label><input type="text" name="city" class="form-control" value="<?= htmlspecialchars($currentUser['city'] ?? '') ?>"></div>
@@ -108,7 +108,7 @@ $wishlist = $stmtWl->fetchAll();
               <div class="form-group" style="margin-bottom:0;grid-column:1/-1;"><label class="form-label">Address</label><textarea name="address" class="form-control" rows="2"><?= htmlspecialchars($currentUser['address'] ?? '') ?></textarea></div>
               <div style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:1.25rem;margin-top:0.5rem;">
                 <div style="font-weight:700; margin-bottom:0.875rem; font-size:0.9rem; color:var(--text-secondary);">Change Password (Optional)</div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="grid-2">
                   <div class="form-group" style="margin-bottom:0;"><label class="form-label">Current Password</label><input type="password" name="old_password" class="form-control" placeholder="Current password"></div>
                   <div class="form-group" style="margin-bottom:0;"><label class="form-label">New Password</label><input type="password" name="new_password" class="form-control" placeholder="Min 8 characters"></div>
                 </div>

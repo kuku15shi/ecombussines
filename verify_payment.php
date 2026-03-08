@@ -35,7 +35,7 @@ if (hash_equals($expectedSignature, $signature)) {
         // Clear Cart
         unset($_SESSION['cart'], $_SESSION['coupon_discount'], $_SESSION['coupon_code']);
         
-        header('Location: order_success.php?order=' . urlencode($orderNum));
+        header('Location: ' . SITE_URL . '/order/' . urlencode($orderNum) . '/success');
         exit;
     } else {
         die("Error: Matching order not found in our database for this payment.");

@@ -56,14 +56,14 @@ $lowStock = $pdo->query("SELECT * FROM products WHERE stock <= 5 AND is_active=1
     <div class="content-area">
 
       <!-- Welcome -->
-      <div style="background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(255,101,132,0.1)); border:1px solid rgba(108,99,255,0.25); border-radius:var(--radius); padding:1.25rem 1.5rem; margin-bottom:1.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.875rem;">
+      <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(255,101,132,0.06)); border:1px solid var(--border); border-radius:var(--radius); padding:1.75rem; margin-bottom:2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; box-shadow: var(--shadow-sm);">
         <div>
-          <div style="font-size:1.2rem; font-weight:800; margin-bottom:0.2rem;">Good <?= (date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening')) ?>, <?= htmlspecialchars($_SESSION['admin_name']) ?>! 👋</div>
-          <div style="color:var(--text-muted); font-size:0.8rem;"><?= date('d M Y') ?> · LuxeStore Admin</div>
+          <h1 style="font-size:1.5rem; font-weight:900; margin-bottom:0.4rem; background: linear-gradient(135deg, var(--primary), #FA709A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Good <?= (date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening')) ?>, <?= htmlspecialchars($_SESSION['admin_name']) ?>! 👋</h1>
+          <div style="color:var(--text-muted); font-size:0.85rem; letter-spacing: 0.5px;" class="d-md-inline"><?= date('l, d F Y') ?> · LuxeStore Control Center</div>
         </div>
-        <div style="display:flex; gap:0.625rem; flex-wrap:wrap;">
-          <a href="products.php?action=add" class="btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Add Product</a>
-          <a href="orders.php" class="btn-primary btn-sm btn-warning"><i class="bi bi-bag-check"></i> Orders</a>
+        <div class="btn-group" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <a href="products.php?action=add" class="btn-primary" style="justify-content:center;"><i class="bi bi-plus-lg"></i> New Product</a>
+          <a href="orders.php" class="btn-primary" style="background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-primary); justify-content:center;"><i class="bi bi-bag-check"></i> Orders</a>
         </div>
       </div>
 
@@ -112,30 +112,28 @@ $lowStock = $pdo->query("SELECT * FROM products WHERE stock <= 5 AND is_active=1
 
         <!-- Quick Stats -->
         <div class="data-table-card">
-          <div class="data-table-header"><div class="data-table-title">⚡ Quick Stats</div></div>
-          <div style="padding:1.25rem;">
+          <div class="data-table-header"><div class="data-table-title">⚡ Quick Insights</div></div>
+          <div style="padding:1.5rem;">
             <?php
             $qstats = [
-              ['Pending Orders', $pendingOrders, 'badge-pending', 'bi-clock'],
-              ['Pending Withdrawals', $pdo->query("SELECT COUNT(*) as c FROM affiliate_withdrawals WHERE status='pending'")->fetch()['c'], 'badge-warning', 'bi-cash-stack'],
-              ['Processing', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='processing'")->fetch()['c'], 'badge-processing', 'bi-gear'],
-              ['Shipped', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='shipped'")->fetch()['c'], 'badge-shipped', 'bi-truck'],
-              ['Delivered', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='delivered'")->fetch()['c'], 'badge-delivered', 'bi-house-check'],
-              ['Cancelled', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='cancelled'")->fetch()['c'], 'badge-cancelled', 'bi-x-circle'],
+              ['Pending Orders', $pendingOrders, 'badge-pending', 'bi-clock-history', 'var(--warning)'],
+              ['Pending Withdrawals', $pdo->query("SELECT COUNT(*) as c FROM affiliate_withdrawals WHERE status='pending'")->fetch()['c'], 'badge-warning', 'bi-cash-stack', 'var(--gold)'],
+              ['Processing', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='processing'")->fetch()['c'], 'badge-processing', 'bi-gear-wide-connected', 'var(--info)'],
+              ['In Transit', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='shipped'")->fetch()['c'], 'badge-shipped', 'bi-truck', 'var(--primary)'],
+              ['Low Stock', count($lowStock), 'badge-cancelled', 'bi-exclamation-triangle', 'var(--danger)'],
             ];
             foreach($qstats as $qs):
             ?>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom:1px solid var(--border);">
-              <div style="display:flex; align-items:center; gap:0.6rem; font-size:0.875rem;">
-                <i class="bi <?= $qs[3] ?>" style="font-size:1rem;"></i> <?= $qs[0] ?>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 0; border-bottom:1px solid var(--border);">
+              <div style="display:flex; align-items:center; gap:0.75rem; font-size:0.875rem; font-weight: 500;">
+                <div style="width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center;">
+                  <i class="bi <?= $qs[3] ?>" style="color:<?= $qs[4] ?>;"></i>
+                </div>
+                <?= $qs[0] ?>
               </div>
               <span class="badge <?= $qs[2] ?>"><?= $qs[1] ?></span>
             </div>
             <?php endforeach; ?>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0;">
-              <div style="font-size:0.875rem;">Low Stock Products</div>
-              <span class="badge badge-cancelled"><?= count($lowStock) ?></span>
-            </div>
           </div>
         </div>
       </div>

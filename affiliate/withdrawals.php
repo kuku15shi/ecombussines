@@ -73,22 +73,37 @@ $csrf_token = generateCsrfToken();
             display: none;
         }
         .method-card {
-            border: 2px solid #e2e8f0;
-            padding: 1.25rem;
+            border: 2px solid #f1f5f9;
+            padding: 1.5rem 1rem;
             border-radius: 16px;
             cursor: pointer;
             transition: all 0.3s ease;
             text-align: center;
+            background: #f8fafc;
+            color: #64748b;
+        }
+        .method-card:hover {
+            border-color: #e2e8f0;
+            background: #fff;
         }
         .method-check:checked + .method-card {
             border-color: var(--primary);
             background: rgba(99, 102, 241, 0.05);
-            color: #1207dcff;;
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
         }
         .method-card i {
             display: block;
             font-size: 2rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+        .withdrawal-stats-card {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
         }
     </style>
 </head>
@@ -106,12 +121,12 @@ $csrf_token = generateCsrfToken();
 
         <div class="row g-4">
             <div class="col-lg-5">
-                <div class="glass-card mb-4" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border:none;">
-                    <div class="small fw-600 text-white-50 mb-1">AVAILABLE TO WITHDRAW</div>
+                <div class="withdrawal-stats-card mb-4">
+                    <div class="small fw-700 text-white-50 mb-2 text-uppercase" style="letter-spacing: 1px;">Available to Withdraw</div>
                     <div class="display-5 fw-900 mb-3"><?= formatPrice($affiliate['balance']) ?></div>
                     <div class="d-flex align-items-center gap-2 small text-white-50">
-                        <i class="bi bi-info-circle"></i>
-                        <span>Min payout: <?= formatPrice(AFFILIATE_MIN_WITHDRAWAL) ?></span>
+                        <i class="bi bi-shield-check"></i>
+                        <span>Minimum payout is <?= formatPrice(AFFILIATE_MIN_WITHDRAWAL) ?></span>
                     </div>
                 </div>
 

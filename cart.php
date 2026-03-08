@@ -122,15 +122,15 @@ $total = $subtotal - $discount + $shipping + $gst;
         <?php endforeach; ?>
 
         <!-- Coupon -->
-        <div class="glass-card" style="padding:1.25rem;">
-          <div style="font-weight:700; margin-bottom:0.75rem;"><i class="bi bi-ticket-perforated" style="color:var(--gold);"></i> Apply Coupon</div>
-          <div style="display:flex; gap:0.75rem;">
-            <input type="text" id="couponInput" class="form-control" placeholder="Enter coupon code" value="<?= htmlspecialchars($couponCode) ?>" style="flex:1;">
-            <button class="btn-primary-luxury" onclick="applyCoupon()" style="white-space:nowrap; padding:0.65rem 1.25rem;">
+        <div class="glass-card" style="padding:1.5rem;">
+          <div style="font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;"><i class="bi bi-ticket-perforated" style="color:var(--gold); font-size:1.2rem;"></i> Apply Coupon</div>
+          <div class="coupon-container" style="display:flex; gap:0.75rem;">
+            <input type="text" id="couponInput" class="form-control" placeholder="Enter coupon code" value="<?= htmlspecialchars($couponCode) ?>" style="flex:1; min-width:0; background:var(--glass);">
+            <button class="btn-primary-luxury" onclick="applyCoupon()" style="white-space:nowrap; padding:0.65rem 1.5rem; justify-content:center; border-radius:10px;">
               Apply
             </button>
           </div>
-          <div id="couponMsg" style="margin-top:0.6rem; font-size:0.82rem;"></div>
+          <div id="couponMsg" style="margin-top:0.75rem; font-size:0.85rem; font-weight:500;"></div>
         </div>
       </div>
 

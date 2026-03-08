@@ -72,7 +72,7 @@ $banners = $pdo->query("SELECT * FROM banners ORDER BY position ASC, id DESC")->
     <?php include 'includes/topbar.php'; ?>
     <div class="content-area">
       <?php if(isset($_GET['success'])): ?><div class="alert alert-success"><i class="bi bi-check-circle"></i> Saved!</div><?php endif; ?>
-      <div style="display:grid; grid-template-columns:360px 1fr; gap:1.5rem; align-items:start;">
+      <div class="admin-grid-form">
         <div class="form-card">
           <div style="font-weight:800; margin-bottom:1.25rem;" id="formTitle">🖼 Add Banner</div>
           <form method="POST" enctype="multipart/form-data" id="bannerForm">
@@ -80,7 +80,7 @@ $banners = $pdo->query("SELECT * FROM banners ORDER BY position ASC, id DESC")->
             <input type="hidden" name="edit_id" id="editId" value="0">
             <div class="form-group"><label class="form-label">Title *</label><input type="text" name="title" id="bTitle" class="form-control" required></div>
             <div class="form-group"><label class="form-label">Subtitle</label><input type="text" name="subtitle" id="bSub" class="form-control"></div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.875rem;">
+            <div class="form-grid-2">
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">Button Text</label><input type="text" name="btn_text" id="bBtn" class="form-control" placeholder="Shop Now"></div>
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">Button URL</label><input type="text" name="btn_url" id="bUrl" class="form-control" placeholder="/products.php"></div>
             </div>

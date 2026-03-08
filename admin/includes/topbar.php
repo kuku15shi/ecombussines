@@ -71,11 +71,11 @@ window.addEventListener('resize', () => {
     
     <a href="../index.php" target="_blank" class="nav-icon-btn" title="View Store" style="display:flex; align-items:center; gap:0.5rem; color:var(--text-muted); text-decoration:none;">
       <i class="bi bi-box-arrow-up-right"></i>
-      <span class="d-none d-md-inline" style="font-size:0.8rem; font-weight:600;">Store</span>
+      <span class="store-link-text d-none d-md-inline" style="font-size:0.8rem; font-weight:600;">Store</span>
     </a>
 
     <div style="display:flex; align-items:center; gap:0.75rem;">
-      <div style="text-align:right;" class="d-sm-block">
+      <div style="text-align:right;" class="admin-name-wrap d-sm-block">
         <div style="font-size:0.8rem; font-weight:600;"><?= htmlspecialchars($adminName) ?></div>
         <div style="font-size:0.7rem; color:var(--text-muted);">Super Admin</div>
       </div>

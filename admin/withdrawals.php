@@ -87,12 +87,12 @@ $csrf_token = generateCsrfToken();
     <div class="main-content">
         <?php include 'includes/topbar.php'; ?>
         <div class="content-area">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem;">
                 <div>
-                    <h1 style="font-weight: 800; margin-bottom: 0.25rem;">Withdrawal Requests</h1>
-                    <p class="text-muted small mb-0">Manage and process affiliate payout requests.</p>
+                    <h1 style="font-weight: 800; margin-bottom: 0.25rem; font-size:1.3rem;">Withdrawal Requests</h1>
+                    <p style="color:var(--text-muted); font-size:0.82rem; margin:0;">Manage and process affiliate payout requests.</p>
                 </div>
-                <div style="display:flex; gap:0.5rem;">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
                     <a href="withdrawals.php" class="btn-primary btn-sm <?= !$status?'':'btn-outline' ?>" style="text-decoration:none;">All</a>
                     <a href="withdrawals.php?status=pending" class="btn-primary btn-sm <?= $status==='pending'?'':'btn-outline' ?>" style="text-decoration:none;">Pending</a>
                     <a href="withdrawals.php?status=completed" class="btn-primary btn-sm <?= $status==='completed'?'':'btn-outline' ?>" style="text-decoration:none;">Completed</a>
@@ -190,9 +190,7 @@ $csrf_token = generateCsrfToken();
     </div>
 </div>
 <script>
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('active');
-    }
+    // Sidebar toggle is handled by topbar.php's toggleSidebar() function
 </script>
 </body>
 </html>

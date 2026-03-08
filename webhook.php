@@ -1,5 +1,6 @@
 <?php
 file_put_contents(__DIR__ . '/webhook_debug.log', date('[Y-m-d H:i:s] ') . "Webhook Hit! Method: " . $_SERVER['REQUEST_METHOD'] . " Query: " . $_SERVER['QUERY_STRING'] . "\n", FILE_APPEND);
+// We'll log the actual data after decoding later for security but for now let's log method
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/whatsapp_functions.php';
 
@@ -33,6 +34,8 @@ $from = $message['from']; // Customer Phone
 $text = strtolower(trim($message['text']['body'] ?? ''));
 $messageId = $message['id'];
 
+file_put_contents(__DIR__ . '/webhook_debug.log', date('[Y-m-d H:i:s] ') . "Message from: $from | Text: $text\n", FILE_APPEND);
+
 // Store Incoming Message
 try {
     $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, message_id, status) VALUES (?, ?, 'incoming', ?, 'received')")
@@ -41,26 +44,11 @@ try {
     error_log("Webhook DB Error: " . $e->getMessage());
 }
 
-$reply = "";
+// Receiver and Session Logic
+require_once __DIR__ . '/bot_engine.php';
 
-// Chatbot Logic
-if ($text === 'hi' || $text === 'hello') {
-    $reply = "Welcome to " . SITE_NAME . " 👋\nSend:\nTrack <OrderID> to track order\nHelp for support options";
-} elseif (preg_match('/^track\s+([a-zA-Z0-9]+)$/', $text, $matches)) {
-    $reply = trackOrderOnWhatsApp($matches[1], $from);
-} elseif (is_numeric($text)) {
-    // If only number, treat as Order ID
-    $reply = trackOrderOnWhatsApp($text, $from);
-} elseif ($text === 'help') {
-    $reply = "Support Options:\n1. Track Order (Send: Track <ID>)\n2. Return Policy (Send: Return Policy)\n3. Contact Support (+91 11111 22222)";
-} elseif ($text === 'return policy') {
-    $reply = "Our Return Policy:\nYou can return products within 7 days of delivery. Items must be in original condition with tags and packaging intact. Refund will be credited within 5-7 working days.";
-} else {
-    // Default fallback or partial matches?
-    // Let's keep it simple for now, or just don't reply if it's not recognized?
-    // User requested "If order not found: Reply 'Order not found or number mismatch.'"
-    // But that's only if they tried tracking.
-}
+$bot = new WhatsAppBot($pdo, $from, $text);
+$reply = $bot->process();
 
 if ($reply) {
     // Send Outgoing Reply

@@ -4,8 +4,8 @@ $cartCount = getCartCount($pdo);
 $wishlistCount = getWishlistCount($pdo);
 ?>
 <div class="bottom-nav">
-  <a href="<?= SITE_URL ?>/index" class="bottom-nav-item <?= $currentPage == 'index.php' ? 'active' : '' ?>">
-    <i class="bi <?= $currentPage == 'index.php' ? 'bi-house-heart-fill' : 'bi-house-heart' ?>"></i>
+  <a href="<?= SITE_URL ?>/index" class="bottom-nav-item <?= ($currentPage == 'index.php' || strpos($_SERVER['REQUEST_URI'], '/index') !== false) ? 'active' : '' ?>">
+    <i class="bi <?= ($currentPage == 'index.php' || strpos($_SERVER['REQUEST_URI'], '/index') !== false) ? 'bi-house-heart-fill' : 'bi-house-heart' ?>"></i>
     <span>Home</span>
   </a>
   <a href="<?= SITE_URL ?>/products" class="bottom-nav-item <?= $currentPage == 'products.php' ? 'active' : '' ?>">

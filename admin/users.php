@@ -29,7 +29,7 @@ if($search) {
     $params[] = "%$search%";
 }
 
-$stmt = $pdo->prepare("SELECT u.*, (SELECT COUNT(*) FROM orders WHERE user_id=u.id) as order_count, (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND status!='cancelled') as total_spent FROM users u $where ORDER BY u.created_at DESC");
+$stmt = $pdo->prepare("SELECT u.*, (SELECT COUNT(*) FROM orders WHERE user_id=u.id) as order_count, (SELECT COALESCE(SUM(total),0) FROM orders WHERE user_id=u.id AND order_status!='cancelled') as total_spent FROM users u $where ORDER BY u.created_at DESC");
 $stmt->execute($params);
 $users = $stmt->fetchAll();
 ?>
@@ -59,7 +59,7 @@ $users = $stmt->fetchAll();
       <!-- Search -->
       <div class="data-table-card" style="margin-bottom:1.25rem;">
         <div style="padding:1rem 1.25rem;">
-          <form method="GET" style="display:flex; gap:0.75rem;">
+          <form method="GET" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
             <input type="text" name="search" class="filter-input" placeholder="🔍 Search users..." value="<?= htmlspecialchars($search) ?>" style="flex:1;">
             <button type="submit" class="btn-primary btn-sm"><i class="bi bi-search"></i></button>
           </form>

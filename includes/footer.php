@@ -42,32 +42,32 @@
     </div>
 
     <div class="footer-bottom">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem;">
-        <div>
-          <p style="margin-bottom:0.5rem; color:var(--text-muted); font-size:0.875rem;">© <?= date('Y') ?> LuxeStore. All rights reserved.</p>
-          <div style="display:flex; gap:1rem; align-items:center; font-size:0.75rem; color:var(--text-muted);">
-            <a href="#" style="color:inherit; text-decoration:none;">Privacy Policy</a>
+      <div class="footer-bottom-grid">
+        <div class="footer-copyright">
+          <p class="copyright-text">© <?= date('Y') ?> LuxeStore. All rights reserved.</p>
+          <div class="legal-links">
+            <a href="#">Privacy Policy</a>
             <span>•</span>
-            <a href="#" style="color:inherit; text-decoration:none;">Terms of Service</a>
+            <a href="#">Terms of Service</a>
           </div>
         </div>
         
-        <div style="display:flex; align-items:center; gap:2rem; flex-wrap:wrap;">
-          <div style="text-align:right;">
-             <div style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.75rem; letter-spacing:1px;">Secure Payments</div>
-             <div style="display:flex; gap:1.25rem; align-items:center;">
-               <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" style="height:14px; width:auto; filter: grayscale(1) opacity(0.6);">
-               <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" style="height:22px; width:auto; filter: grayscale(1) opacity(0.6);">
-               <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" style="height:18px; width:auto; filter: grayscale(1) opacity(0.6);">
-               <span style="font-size:0.75rem; font-weight:900; color:var(--text-muted); letter-spacing:-0.2px; opacity:0.6;">RAZORPAY</span>
+        <div class="footer-trust">
+          <div class="payment-section">
+             <div class="trust-title">Secure Payments</div>
+             <div class="payment-badges">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" class="trust-img-visa">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" class="trust-img-mc">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" class="trust-img-pp">
+               <span class="razorpay-text">RAZORPAY</span>
              </div>
           </div>
-          <div class="mobile-hide" style="height:40px; width:1px; background:var(--border);"></div>
-          <div style="display:flex; align-items:center; gap:0.6rem; color:var(--success);">
-            <i class="bi bi-shield-lock-fill" style="font-size:1.4rem;"></i>
-            <div style="line-height:1.1;">
-              <div style="font-size:0.6rem; font-weight:900; text-transform:uppercase; letter-spacing:0.5px;">SSL</div>
-              <div style="font-size:0.7rem; font-weight:800;">ENCRYPTED</div>
+          <div class="trust-divider mobile-hide"></div>
+          <div class="ssl-section">
+            <i class="bi bi-shield-lock-fill"></i>
+            <div class="ssl-text">
+              <div class="ssl-label">SSL</div>
+              <div class="ssl-status">ENCRYPTED</div>
             </div>
           </div>
         </div>

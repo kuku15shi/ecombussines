@@ -89,48 +89,51 @@ $referralLink = SITE_URL . "/index.php?ref=" . $affCode;
     <div class="main-content">
         <header class="d-flex justify-content-between align-items-center mb-5">
             <div>
-                <h1 style="font-weight: 800; font-size: 2rem;">Welcome back, <?= explode(' ', $_SESSION['affiliate_name'])[0] ?>! 👋</h1>
-                <p class="text-secondary mb-0">Here's your performance snapshot for today.</p>
+                <h1 style="font-weight: 800; font-size: 2.25rem; letter-spacing: -1px; color: #1e293b;">Hello, <?= explode(' ', $_SESSION['affiliate_name'])[0] ?>! 👋</h1>
+                <p class="text-secondary mb-0 fw-500">Track your performance and manage your earnings.</p>
             </div>
-            <button class="btn d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list fs-2"></i></button>
+            <div class="d-flex gap-3">
+                <button class="btn btn-outline-secondary rounded-pill px-4 d-none d-lg-block"><i class="bi bi-calendar3 me-2"></i> Last 7 Days</button>
+                <button class="btn d-lg-none" onclick="toggleSidebar()"><i class="bi bi-list fs-2"></i></button>
+            </div>
         </header>
 
         <!-- Stats Grid -->
-        <div class="row g-4 mb-4">
+        <div class="row g-4 mb-5">
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="icon-box bg-primary-subtle text-primary">
-                        <i class="bi bi-cursor-fill"></i>
+                    <div class="icon-box" style="background: rgba(99, 102, 241, 0.1); color: #6366f1;">
+                        <i class="bi bi-mouse3"></i>
                     </div>
-                    <div class="text-secondary small fw-600">Total Link Clicks</div>
-                    <div class="h3 fw-800 mt-1"><?= number_format($stats['clicks']) ?></div>
+                    <div class="text-secondary small fw-700 text-uppercase mb-1" style="letter-spacing: 0.5px;">Link Clicks</div>
+                    <div class="h2 fw-900 mb-0"><?= number_format($stats['clicks']) ?></div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="icon-box bg-warning-subtle text-warning">
+                    <div class="icon-box" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
                         <i class="bi bi-clock-history"></i>
                     </div>
-                    <div class="text-secondary small fw-600">Pending Payouts</div>
-                    <div class="h3 fw-800 mt-1"><?= formatPrice($stats['pending_earnings']) ?></div>
+                    <div class="text-secondary small fw-700 text-uppercase mb-1" style="letter-spacing: 0.5px;">Pending Earnings</div>
+                    <div class="h2 fw-900 mb-0"><?= formatPrice($stats['pending_earnings']) ?></div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="icon-box bg-success-subtle text-success">
-                        <i class="bi bi-check-circle-fill"></i>
+                    <div class="icon-box" style="background: rgba(34, 197, 94, 0.1); color: #22c55e;">
+                        <i class="bi bi-check-circle"></i>
                     </div>
-                    <div class="text-secondary small fw-600">Total Earnings</div>
-                    <div class="h3 fw-800 mt-1"><?= formatPrice($stats['total_earned']) ?></div>
+                    <div class="text-secondary small fw-700 text-uppercase mb-1" style="letter-spacing: 0.5px;">Total Payouts</div>
+                    <div class="h2 fw-900 mb-0"><?= formatPrice($stats['total_earned']) ?></div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card border-primary border-opacity-25" style="background: rgba(99, 102, 241, 0.03);">
-                    <div class="icon-box bg-primary text-white shadow-sm">
-                        <i class="bi bi-wallet-fill"></i>
+                <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none;">
+                    <div class="icon-box shadow-lg" style="background: rgba(255, 255, 255, 0.2); color: white; margin-bottom: 1rem;">
+                        <i class="bi bi-wallet2"></i>
                     </div>
-                    <div class="text-secondary small fw-600">Available Balance</div>
-                    <div class="h3 fw-800 mt-1" style="color: var(--primary);"><?= formatPrice($affiliate['balance'] ?? $stats['balance']) ?></div>
+                    <div class="text-white-50 small fw-700 text-uppercase mb-1" style="letter-spacing: 0.5px;">Available Balance</div>
+                    <div class="h2 fw-900 mb-0"><?= formatPrice($stats['balance']) ?></div>
                 </div>
             </div>
         </div>
@@ -138,7 +141,12 @@ $referralLink = SITE_URL . "/index.php?ref=" . $affCode;
         <div class="row g-4 mb-5">
             <div class="col-lg-8">
                 <div class="glass-card h-100">
-                    <h5 class="fw-800 mb-4">Weekly Engagement</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-800 mb-0">Engagement Dynamics</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light rounded-pill px-3" disabled>This Week</button>
+                        </div>
+                    </div>
                     <div style="position: relative; height: 320px; width: 100%;">
                         <canvas id="performanceChart"></canvas>
                     </div>
@@ -146,19 +154,20 @@ $referralLink = SITE_URL . "/index.php?ref=" . $affCode;
             </div>
             <div class="col-lg-4">
                 <div class="glass-card h-100">
-                    <h5 class="fw-800 mb-3">Your Referral Link</h5>
-                    <p class="text-secondary small mb-4">Sharing this link earned you <?= AFFILIATE_COMMISSION_PERCENT ?>% commission on every sale from new customers.</p>
+                    <h5 class="fw-800 mb-3">Referral Link</h5>
+                    <p class="text-secondary small mb-4 fw-500">Share your unique link and earn <span class="text-primary fw-800"><?= AFFILIATE_COMMISSION_PERCENT ?>%</span> for every converted customer.</p>
                     
-                    <div class="link-box mb-4" id="refLink"><?= $referralLink ?></div>
+                    <div class="link-box mb-4 shadow-sm" style="background: #f8fafc; border: 1.5px dashed #e2e8f0; font-family: 'Outfit', sans-serif; font-weight: 600;" id="refLink"><?= $referralLink ?></div>
                     
-                    <button class="btn btn-primary-luxury w-100 py-3" onclick="copyRef()">
-                        <i class="bi bi-clipboard2-check me-2"></i> Copy Link
+                    <button class="btn btn-primary-luxury w-100 py-3 mb-4 rounded-4 shadow-lg" onclick="copyRef()">
+                        <i class="bi bi-clipboard2-check-fill me-2"></i> Copy My Link
                     </button>
                     
-                    <div class="d-flex gap-2 mt-4">
-                        <a href="https://wa.me/?text=Check this out: <?= $referralLink ?>" target="_blank" class="btn btn-outline-success flex-grow-1 border-2 rounded-3"><i class="bi bi-whatsapp"></i></a>
-                        <a href="https://twitter.com/intent/tweet?url=<?= $referralLink ?>&text=Shop at LuxeStore!" target="_blank" class="btn btn-outline-info flex-grow-1 border-2 rounded-3"><i class="bi bi-twitter-x"></i></a>
-                        <a href="#" class="btn btn-outline-primary flex-grow-1 border-2 rounded-3"><i class="bi bi-facebook"></i></a>
+                    <div class="text-secondary x-small fw-800 text-uppercase mb-3" style="letter-spacing: 1px;">Quick Share</div>
+                    <div class="d-flex gap-3">
+                        <a href="https://wa.me/?text=Check this out: <?= $referralLink ?>" target="_blank" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #25D366;"><i class="bi bi-whatsapp fs-5"></i></a>
+                        <a href="https://twitter.com/intent/tweet?url=<?= $referralLink ?>&text=Shop at LuxeStore!" target="_blank" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #1DA1F2;"><i class="bi bi-twitter-x fs-5"></i></a>
+                        <a href="#" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #1877F2;"><i class="bi bi-facebook fs-5"></i></a>
                     </div>
                 </div>
             </div>
@@ -191,9 +200,9 @@ $referralLink = SITE_URL . "/index.php?ref=" . $affCode;
                                 <td class="text-secondary"><?= date('M d, Y', strtotime($row['created_at'])) ?></td>
                                 <td><?= formatPrice($row['order_amount']) ?></td>
                                 <td class="fw-800 text-success">+<?= formatPrice($row['commission_amount']) ?></td>
-                                <td class="pe-4">
+                                 <td class="pe-4">
                                     <span class="badge rounded-pill bg-<?= $row['status']==='paid'?'success':($row['status']==='verified'?'info':'warning') ?> px-3 py-2">
-                                        <?= ucfirst($row['status']) ?>
+                                        <?= $row['status']==='verified' ? 'Approved' : ucfirst($row['status']) ?>
                                     </span>
                                 </td>
                             </tr>

@@ -56,14 +56,14 @@ $coupons = $pdo->query("SELECT * FROM coupons ORDER BY created_at DESC")->fetchA
     <?php include 'includes/topbar.php'; ?>
     <div class="content-area">
       <?php if(isset($_GET['success'])): ?><div class="alert alert-success"><i class="bi bi-check-circle"></i> Saved!</div><?php endif; ?>
-      <div style="display:grid; grid-template-columns:340px 1fr; gap:1.5rem; align-items:start;">
+      <div class="admin-grid-form">
         <div class="form-card" id="formCard">
           <div style="font-weight:800; margin-bottom:1.25rem;" id="formTitle">🎟 Add Coupon</div>
           <form method="POST" id="couponForm">
             <?= csrfField() ?>
             <input type="hidden" name="edit_id" id="editId" value="0">
             <div class="form-group"><label class="form-label">Coupon Code *</label><input type="text" name="code" id="cCode" class="form-control" placeholder="SAVE20" required style="text-transform:uppercase;"></div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.875rem;">
+            <div class="form-grid-2">
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">Type</label><select name="type" id="cType" class="form-control"><option value="percent">Percentage (%)</option><option value="fixed">Fixed (₹)</option></select></div>
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">Value *</label><input type="number" name="value" id="cValue" class="form-control" step="0.01" placeholder="e.g. 15" required></div>
               <div class="form-group" style="margin-bottom:0;"><label class="form-label">Min. Order (₹)</label><input type="number" name="min_order" id="cMin" class="form-control" step="0.01" placeholder="0"></div>
@@ -72,12 +72,13 @@ $coupons = $pdo->query("SELECT * FROM coupons ORDER BY created_at DESC")->fetchA
             <div class="form-group"><label class="form-label">Expiry Date</label><input type="date" name="expires_at" id="cExp" class="form-control"></div>
             <div style="display:flex; gap:0.75rem;">
               <button type="submit" name="save" class="btn-primary" style="flex:1; justify-content:center;"><i class="bi bi-save"></i> Save</button>
-              <button type="button" onclick="resetForm()" class="btn-primary" style="background:var(--glass); color:var(--text); border:1px solid var(--glass-border);">Reset</button>
+              <button type="button" onclick="resetForm()" class="btn-primary" style="background:var(--glass); color:var(--text-primary); border:1px solid var(--glass-border);">Reset</button>
             </div>
           </form>
         </div>
         <div class="data-table-card">
           <div class="data-table-header"><div class="data-table-title">All Coupons (<?= count($coupons) ?>)</div></div>
+          <div class="table-responsive">
           <table class="admin-table">
             <thead><tr><th>Code</th><th>Type</th><th>Value</th><th>Min Order</th><th>Uses</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody>
@@ -105,6 +106,7 @@ $coupons = $pdo->query("SELECT * FROM coupons ORDER BY created_at DESC")->fetchA
               <?php endforeach; ?>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

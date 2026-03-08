@@ -187,10 +187,15 @@ $pageTitle = $category_slug ? ucfirst(str_replace('-', ' ', $category_slug)) : (
             </div>
           </div>
           
-          <div style="display:flex; align-items:center; gap:1rem;">
-            <!-- Sort -->
-            <div style="display:flex; align-items:center; gap:0.5rem;">
-              <span class="d-none d-sm-block" style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Sort by:</span>
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <!-- Sort Trigger (Mobile Only) -->
+            <button class="btn-outline-luxury d-md-none" style="padding:0.5rem 1rem; font-size:0.875rem; border-radius:var(--radius-sm);" onclick="toggleSortSheet()">
+              <i class="bi bi-sort-down"></i> Sort
+            </button>
+
+            <!-- Sort Select (Desktop Only) -->
+            <div class="d-none d-md-flex" style="align-items:center; gap:0.5rem;">
+              <span style="font-size:0.85rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Sort by:</span>
               <select name="sort" onchange="changeSortAndNavigate(this.value)" class="form-control" style="width:160px; padding:0.45rem 0.75rem; font-size:0.875rem; cursor:pointer;">
                 <?php foreach(['newest'=>'Newest First','price_asc'=>'Price: Low to High','price_desc'=>'Price: High to Low','popular'=>'Most Popular','rating'=>'Top Rated'] as $v=>$l): ?>
                 <option value="<?= $v ?>" <?= $sort === $v ? 'selected' : '' ?>><?= $l ?></option>
@@ -198,11 +203,29 @@ $pageTitle = $category_slug ? ucfirst(str_replace('-', ' ', $category_slug)) : (
               </select>
             </div>
             
-            <!-- View Mode -->
+            <!-- View Mode (Desktop Only) -->
             <div style="display:flex; gap:0.5rem; padding-left:0.5rem; border-left:1px solid var(--border);" class="d-none d-sm-flex">
               <button onclick="setGrid(3)" id="grid4" class="nav-icon-btn active" title="3 Column View" style="width:36px; height:36px;"><i class="bi bi-grid-3x3-gap"></i></button>
               <button onclick="setGrid(2)" id="grid2" class="nav-icon-btn" title="2 Column View" style="width:36px; height:36px;"><i class="bi bi-grid"></i></button>
             </div>
+          </div>
+        </div>
+
+        <!-- Mobile Sort Sheet -->
+        <div id="sortSheetOverlay" onclick="toggleSortSheet()" style="position:fixed; inset:0; background:rgba(0,0,0,0.4); backdrop-filter:blur(4px); z-index:2000; display:none; opacity:0; transition:var(--transition);"></div>
+        <div id="sortSheet" class="sort-sheet">
+          <div class="sheet-header">
+             <div class="sheet-handle"></div>
+             <div style="font-weight:800; font-size:1.1rem; color:var(--text-primary);">Sort Products</div>
+          </div>
+          <div class="sheet-content">
+            <?php foreach(['newest'=>'Newest First','price_asc'=>'Price: Low to High','price_desc'=>'Price: High to Low','popular'=>'Most Popular','rating'=>'Top Rated'] as $v=>$l): ?>
+            <label class="sort-sheet-item <?= $sort === $v ? 'active' : '' ?>">
+               <input type="radio" name="mobile_sort" value="<?= $v ?>" <?= $sort === $v ? 'checked' : '' ?> onchange="changeSortAndNavigate(this.value)">
+               <span><?= $l ?></span>
+               <i class="bi bi-check2"></i>
+            </label>
+            <?php endforeach; ?>
           </div>
         </div>
 
@@ -284,6 +307,22 @@ $pageTitle = $category_slug ? ucfirst(str_replace('-', ' ', $category_slug)) : (
       const isActive = sidebar.classList.toggle('active');
       overlay.style.display = isActive ? 'block' : 'none';
       document.body.style.overflow = isActive ? 'hidden' : '';
+    }
+
+    function toggleSortSheet() {
+      const sheet = document.getElementById('sortSheet');
+      const overlay = document.getElementById('sortSheetOverlay');
+      const isShowing = sheet.classList.toggle('active');
+      
+      if(isShowing) {
+        overlay.style.display = 'block';
+        setTimeout(() => overlay.style.opacity = '1', 10);
+        document.body.style.overflow = 'hidden';
+      } else {
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 300);
+        document.body.style.overflow = '';
+      }
     }
 
     // Load preferred grid view

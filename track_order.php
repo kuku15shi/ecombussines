@@ -189,13 +189,13 @@ if($order['order_status'] === 'cancelled') $currentStep = -1;
         <h3 style="font-weight:800; margin-bottom:1.25rem;">Items (<?= count($items) ?>)</h3>
         <div style="display:flex; flex-direction:column; gap:0.75rem;">
           <?php foreach($items as $item): ?>
-          <div style="display:flex; gap:0.75rem; align-items:center;">
-            <img src="<?= UPLOAD_URL . $item['product_image'] ?>" onerror="this.src='<?= SITE_URL ?>/assets/img/default_product.jpg'" style="width:52px; height:52px; border-radius:var(--radius-sm); object-fit:cover;" alt="">
+          <div style="display:flex; gap:1rem; align-items:flex-start; padding:0.5rem 0;">
+            <img src="<?= UPLOAD_URL . $item['product_image'] ?>" onerror="this.src='<?= SITE_URL ?>/assets/img/default_product.jpg'" style="width:56px; height:56px; border-radius:var(--radius-sm); object-fit:cover; flex-shrink:0; border:1px solid var(--glass-border);" alt="">
             <div style="flex:1; min-width:0;">
-              <div style="font-size:0.875rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?= htmlspecialchars($item['product_name']) ?></div>
-              <div style="font-size:0.75rem; color:var(--text-muted);">Qty: <?= $item['quantity'] ?></div>
+              <div style="font-size:0.9rem; font-weight:700; line-height:1.4; color:var(--text-primary); margin-bottom:0.125rem;"><?= htmlspecialchars($item['product_name']) ?></div>
+              <div style="font-size:0.75rem; color:var(--text-muted); font-weight:500;">Qty: <?= $item['quantity'] ?> × <?= formatPrice($item['price']) ?></div>
             </div>
-            <div style="font-weight:700; font-size:0.9rem;"><?= formatPrice($item['total']) ?></div>
+            <div style="font-weight:800; font-size:1rem; white-space:nowrap; margin-left:0.75rem; color:var(--text-primary); text-align:right;"><?= formatPrice($item['total']) ?></div>
           </div>
           <?php endforeach; ?>
         </div>

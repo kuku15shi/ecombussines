@@ -64,8 +64,16 @@ $csrf_token = generateCsrfToken();
         <div class="content-area">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 style="font-weight: 800; margin:0;">Affiliate Commissions</h1>
-                <a href="export_commissions.php" class="btn-primary btn-sm"><i class="bi bi-download"></i> Export CSV</a>
+                <div class="d-flex gap-2">
+                    <a href="export_commissions.php" class="btn-primary btn-sm"><i class="bi bi-download"></i> Export CSV</a>
+                </div>
             </div>
+
+            <style>
+                .badge-verified, .badge-approved { background: rgba(56, 189, 248, 0.12); color: var(--info); border-color: rgba(56, 189, 248, 0.3); }
+                .badge-paid { background: rgba(67, 233, 123, 0.12); color: var(--success); border-color: rgba(67, 233, 123, 0.3); }
+                .badge-cancelled { background: rgba(255, 101, 132, 0.12); color: var(--danger); border-color: rgba(255, 101, 132, 0.3); }
+            </style>
 
             <div class="data-table-card">
                 <div class="table-responsive">
@@ -89,9 +97,9 @@ $csrf_token = generateCsrfToken();
                                 <td style="font-weight:600;"><?= formatPrice($c['order_amount']) ?></td>
                                 <td class="fw-bold text-success"><?= formatPrice($c['commission_amount']) ?></td>
                                 <td><?= date('d M Y', strtotime($c['created_at'])) ?></td>
-                                <td>
+                                 <td>
                                     <span class="badge badge-<?= $c['status'] ?>">
-                                        <?= ucfirst($c['status']) ?>
+                                        <?= $c['status'] === 'verified' ? 'Approved' : ucfirst($c['status']) ?>
                                     </span>
                                 </td>
                                 <td>
@@ -99,10 +107,10 @@ $csrf_token = generateCsrfToken();
                                     <form method="POST" style="display:inline;">
                                         <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                                         <input type="hidden" name="id" value="<?= $c['id'] ?>">
-                                        <?php if ($c['status'] === 'pending'): ?>
-                                            <button type="submit" name="action" value="verify" class="btn-primary btn-sm" style="background:var(--success); border-color:var(--success);">Verify</button>
+                                         <?php if ($c['status'] === 'pending'): ?>
+                                            <button type="submit" name="action" value="verify" class="btn-primary btn-sm" style="background:var(--success); border-color:var(--success);"><i class="bi bi-check-circle"></i> Approve</button>
                                         <?php elseif ($c['status'] === 'verified'): ?>
-                                            <button type="submit" name="action" value="pay" class="btn-primary btn-sm">Mark Paid</button>
+                                            <button type="submit" name="action" value="pay" class="btn-primary btn-sm"><i class="bi bi-cash"></i> Mark Paid</button>
                                         <?php endif; ?>
                                         <?php if ($c['status'] !== 'paid' && $c['status'] !== 'cancelled'): ?>
                                             <button type="submit" name="action" value="cancel" class="btn-primary btn-sm btn-outline" style="border-color:var(--danger); color:var(--danger);">Cancel</button>

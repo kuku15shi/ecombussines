@@ -64,7 +64,7 @@ $categories = $pdo->query("SELECT c.*, COUNT(p.id) as product_count FROM categor
             <div class="form-group"><label class="form-label">Description</label><textarea name="description" id="catDesc" class="form-control" rows="3" placeholder="Brief category description"></textarea></div>
             <div style="display:flex; gap:0.75rem;">
               <button type="submit" name="save" class="btn-primary" style="flex:1; justify-content:center;"><i class="bi bi-save"></i> Save</button>
-              <button type="button" onclick="resetForm()" class="btn-primary" style="background:var(--glass); color:var(--text); border:1px solid var(--glass-border);">Reset</button>
+              <button type="button" onclick="resetForm()" class="btn-primary" style="background:var(--glass); color:var(--text-primary); border:1px solid var(--glass-border);">Reset</button>
             </div>
           </form>
         </div>

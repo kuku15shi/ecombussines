@@ -359,7 +359,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
             <div style="font-size:0.75rem; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
               <i class="bi bi-shield-lock" style="color:var(--primary);"></i> SAFETY & SECURITY
             </div>
-            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:1rem;">
+            <div class="grid-2" style="gap:1rem;">
               <div style="display:flex; align-items:center; gap:0.6rem; background:rgba(108,99,255,0.05); border:1px solid rgba(108,99,255,0.1); border-radius:12px; padding:0.75rem 1rem;">
                 <i class="bi bi-shield-check" style="color:var(--primary); font-size:1.2rem;"></i>
                 <div style="font-size:0.8rem; font-weight:600; color:var(--text-primary);">Secure Checkout</div>
