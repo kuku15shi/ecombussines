@@ -183,12 +183,12 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
 
     <!-- FEATURED PRODUCTS -->
     <section style="margin:3rem 0;">
-      <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end; text-align:left; margin-bottom:1.75rem;">
+      <div class="section-header-flex">
         <div>
           <div class="section-badge">Handpicked</div>
           <h2 class="section-title">Featured Products</h2>
         </div>
-        <a href="products?filter=featured" class="btn-outline-luxury" style="flex-shrink:0;">View All <i class="bi bi-arrow-right"></i></a>
+        <a href="products?filter=featured" class="btn-outline-luxury">View All <i class="bi bi-arrow-right"></i></a>
       </div>
       <?php if(empty($featuredProducts)): ?>
       <div style="text-align:center; padding:3rem; color:var(--text-muted);">
@@ -208,12 +208,12 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
     <!-- TOP PRODUCTS -->
     <?php if(!empty($topProducts)): ?>
     <section style="margin:3rem 0;">
-      <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end; text-align:left; margin-bottom:1.75rem;">
+      <div class="section-header-flex">
         <div>
           <div class="section-badge">Best Sellers</div>
           <h2 class="section-title">Top Products</h2>
         </div>
-        <a href="products?filter=top" class="btn-outline-luxury" style="flex-shrink:0;">View All <i class="bi bi-arrow-right"></i></a>
+        <a href="products?filter=top" class="btn-outline-luxury">View All <i class="bi bi-arrow-right"></i></a>
       </div>
       <div class="products-grid">
         <?php foreach($topProducts as $p): ?>
@@ -243,12 +243,12 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
     <!-- TRENDING PRODUCTS -->
     <?php if(!empty($trendingProducts)): ?>
     <section style="margin:3rem 0;">
-      <div class="section-header" style="display:flex; justify-content:space-between; align-items:flex-end; text-align:left; margin-bottom:1.75rem;">
+      <div class="section-header-flex">
         <div>
           <div class="section-badge">🔥 Hot</div>
           <h2 class="section-title">Trending Now</h2>
         </div>
-        <a href="products?filter=trending" class="btn-outline-luxury" style="flex-shrink:0;">View All <i class="bi bi-arrow-right"></i></a>
+        <a href="products?filter=trending" class="btn-outline-luxury">View All <i class="bi bi-arrow-right"></i></a>
       </div>
       <div class="products-grid">
         <?php foreach($trendingProducts as $p): ?>
