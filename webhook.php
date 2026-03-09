@@ -64,13 +64,20 @@ if ($buttonId) {
 
 
 if ($reply) {
-    // Send Outgoing Reply
-    sendWhatsAppMessage($from, $reply, 'text');
+    if (is_array($reply) && isset($reply['_type']) && $reply['_type'] === 'interactive') {
+        // Send Interactive Button Message
+        sendWhatsAppMessage($from, $reply['_payload'], 'interactive');
+        $logMsg = json_encode($reply['_payload']);
+    } else {
+        // Send plain text
+        sendWhatsAppMessage($from, $reply, 'text');
+        $logMsg = $reply;
+    }
     
     // Store Outgoing Message
     try {
         $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-            ->execute([$from, $reply]);
+            ->execute([$from, is_string($reply) ? $reply : '[Interactive Message]']);
     } catch (Exception $e) {
         error_log("Webhook Reply DB Error: " . $e->getMessage());
     }

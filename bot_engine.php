@@ -79,7 +79,30 @@ class WhatsAppBot {
      * Handle Button Replies from Interactive Messages
      */
     public function handleButton($id) {
-        if ($id === 'support') return $this->handleMainMenu('5');
+        // Main menu button handlers
+        if ($id === 'menu_track') {
+            $this->saveSession('track_order_id');
+            return "📦 Please enter your *Order ID*\n\nExample: _ORD12345_\n\nYou can find your Order ID in your confirmation email or SMS.";
+        }
+        if ($id === 'menu_support') {
+            return "👨‍💻 *Customer Support*\n\nPlease describe your issue and our team will reply shortly.\n\nOr call us at our support number.\n\nType MENU to return to the main menu.";
+        }
+        if ($id === 'menu_browse') {
+            $cats = $this->pdo->query("SELECT id, name FROM categories WHERE is_active = 1 LIMIT 8")->fetchAll();
+            $map = [];
+            $msg = "🛒 *Browse Our Collections*\n\nReply with a number to explore:\n";
+            foreach($cats as $i => $c) {
+                $idx = $i + 1;
+                $msg .= "\n$idx. " . $c['name'];
+                $map[$idx] = $c['id'];
+            }
+            $data = $this->session['data'];
+            $data['map'] = $map;
+            $this->saveSession('category_list', $data);
+            return $msg . "\n\nOr type any product name to search.";
+        }
+
+        if ($id === 'support') return $this->handleMainMenu('4');
         
         if (strpos($id, 'track_') === 0) {
             $orderId = substr($id, 6);
@@ -139,15 +162,15 @@ class WhatsAppBot {
     private function mainMenu() {
         $this->saveSession('start');
         
-        // Dynamic Categories for welcome message
+        // Dynamic Categories for text body
         $cats = $this->pdo->query("SELECT id, name FROM categories WHERE is_active = 1 LIMIT 5")->fetchAll();
         $catList = "";
         $map = [];
         if($cats) {
-            $catList = "\n\n🛍️ *Shop by Category*:\n";
+            $catList = "\n\n🛍️ *Shop by Category:*\n";
             foreach($cats as $i => $c) {
-                $idx = $i + 5; // Start from 5 as 1-4 are taken
-                $catList .= "$idx️⃣ " . $c['name'] . "\n";
+                $idx = $i + 5;
+                $catList .= "$idx. " . $c['name'] . "\n";
                 $map[$idx] = $c['id'];
             }
             $data = $this->session['data'];
@@ -155,13 +178,26 @@ class WhatsAppBot {
             $this->saveSession('start', $data);
         }
 
-        return $this->welcomeMsg . "\n\n" .
-               "1️⃣ Track Order\n" .
-               "2️⃣ Cancel Order\n" .
-               "3️⃣ Recent Orders\n" .
-               "4️⃣ Talk to Support\n" .
-               $catList . "\n" .
-               "Or type the product name to search.";
+        $bodyText = "👋 *Welcome to " . SITE_NAME . "!*\n\nHow can I help you today?\n\n" .
+                    "📦 Track Order\n🛍️ Browse Products\n💬 Talk to Support" .
+                    $catList . "\nOr type a product name to search.";
+
+        // Return interactive button message
+        return [
+            '_type' => 'interactive',
+            '_payload' => [
+                "type" => "button",
+                "body" => ["text" => $bodyText],
+                "footer" => ["text" => SITE_NAME . " • Reply anytime"],
+                "action" => [
+                    "buttons" => [
+                        ["type" => "reply", "reply" => ["id" => "menu_track", "title" => "📦 Track Order"]],
+                        ["type" => "reply", "reply" => ["id" => "menu_browse", "title" => "🛍️ Browse Shop"]],
+                        ["type" => "reply", "reply" => ["id" => "menu_support", "title" => "💬 Support"]]
+                    ]
+                ]
+            ]
+        ];
     }
 
     private function handleLangSelection() {
