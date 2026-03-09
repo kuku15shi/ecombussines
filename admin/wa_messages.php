@@ -66,65 +66,74 @@ if (isset($_GET['assign_phone']) && isset($_GET['agent_id'])) {
 
 // Handle Manual Reply
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
-    validateCsrf();
-    $phone = $_POST['phone'] ?? '';
-    $message = $_POST['message'] ?? '';
-    if ($phone && $message) {
-        $res = sendWhatsAppMessage($phone, $message, 'text');
-        if ($res['status'] === 'success') {
-            $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-                ->execute([$phone, $message]);
-            header("Location: wa_messages.php?tab=chat&phone=" . urlencode($phone) . "&success=Sent"); exit;
-        } else {
-            $error = "WhatsApp Error: " . $res['error'];
+    try {
+        validateCsrf();
+        $phone = $_POST['phone'] ?? '';
+        $message = $_POST['message'] ?? '';
+        if ($phone && $message) {
+            $res = sendWhatsAppMessage($phone, $message, 'text');
+            if ($res['status'] === 'success') {
+                $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
+                    ->execute([$phone, $message]);
+                header("Location: wa_messages.php?tab=chat&phone=" . urlencode($phone) . "&success=Sent"); exit;
+            } else {
+                $error = "WhatsApp Error: " . ($res['error'] ?? 'Unknown');
+            }
         }
-    }
+    } catch (Exception $e) { $error = "Error: " . $e->getMessage(); }
 }
 
 // Handle Broadcast
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_broadcast'])) {
-    validateCsrf();
-    $message = $_POST['broadcast_message'] ?? '';
-    if($message) {
-        $stmt = $pdo->query("SELECT DISTINCT phone FROM orders WHERE phone IS NOT NULL AND phone != ''");
-        $customers = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        $count = 0;
-        foreach($customers as $phone) {
-            $res = sendWhatsAppMessage($phone, $message, 'text');
-            if($res['status'] === 'success') {
-                $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-                    ->execute([$phone, $message]);
-                $count++;
+    try {
+        validateCsrf();
+        $message = $_POST['broadcast_message'] ?? '';
+        if($message) {
+            $stmt = $pdo->query("SELECT DISTINCT phone FROM orders WHERE phone IS NOT NULL AND phone != ''");
+            $customers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            $count = 0;
+            foreach($customers as $phone) {
+                $res = sendWhatsAppMessage($phone, $message, 'text');
+                if($res['status'] === 'success') {
+                    $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
+                        ->execute([$phone, $message]);
+                    $count++;
+                }
             }
+            $successMsg = "Broadcast sent successfully to $count customers!";
         }
-        $successMsg = "Broadcast sent successfully to $count customers!";
-    }
+    } catch (Exception $e) { $error = "Error: " . $e->getMessage(); }
 }
 
 $activeTab = $_GET['tab'] ?? 'chat';
 $activePhone = $_GET['phone'] ?? '';
 
-// Fetch Data
-$macros = $pdo->query("SELECT * FROM whatsapp_macros ORDER BY title ASC")->fetchAll();
-$templates = $pdo->query("SELECT * FROM whatsapp_templates ORDER BY name ASC")->fetchAll();
-$faqs = $pdo->query("SELECT * FROM bot_faqs ORDER BY id DESC")->fetchAll();
-$configs = $pdo->query("SELECT config_key, config_value FROM whatsapp_config")->fetchAll(PDO::FETCH_KEY_PAIR);
-$admins = $pdo->query("SELECT id, name FROM admin ORDER BY name ASC")->fetchAll();
+// Fetch Data with Robust Error Handling
+$macros = []; $templates = []; $faqs = []; $configs = []; $admins = []; $convs = []; $messages = [];
 
-// Conversations grouped by phone
-$convsSql = "SELECT m1.phone, m1.message as last_msg, m1.created_at, m1.assigned_to, m1.chat_status,
-            (SELECT COUNT(*) FROM whatsapp_messages WHERE phone = m1.phone AND direction = 'incoming' AND status = 'received') as unread 
-            FROM whatsapp_messages m1 
-            INNER JOIN (SELECT phone, MAX(id) as max_id FROM whatsapp_messages GROUP BY phone) m2 ON m1.id = m2.max_id 
-            ORDER BY m1.created_at DESC LIMIT 100";
-$convs = $pdo->query($convsSql)->fetchAll();
+try {
+    $macros = $pdo->query("SELECT * FROM whatsapp_macros ORDER BY title ASC")->fetchAll();
+    $templates = $pdo->query("SELECT * FROM whatsapp_templates ORDER BY name ASC")->fetchAll();
+    $faqs = $pdo->query("SELECT * FROM bot_faqs ORDER BY id DESC")->fetchAll();
+    $configs = $pdo->query("SELECT config_key, config_value FROM whatsapp_config")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $admins = $pdo->query("SELECT id, name FROM admin ORDER BY name ASC")->fetchAll();
 
-// Active Chat Messages
-$messages = [];
-if ($activePhone) {
-    $stmt = $pdo->prepare("SELECT * FROM whatsapp_messages WHERE phone = ? ORDER BY created_at ASC");
-    $stmt->execute([$activePhone]);
-    $messages = $stmt->fetchAll();
+    // Conversations grouped by phone
+    $convsSql = "SELECT m1.phone, m1.message as last_msg, m1.created_at, m1.assigned_to, m1.chat_status,
+                (SELECT COUNT(*) FROM whatsapp_messages WHERE phone = m1.phone AND direction = 'incoming' AND status = 'received') as unread 
+                FROM whatsapp_messages m1 
+                INNER JOIN (SELECT phone, MAX(id) as max_id FROM whatsapp_messages GROUP BY phone) m2 ON m1.id = m2.max_id 
+                ORDER BY m1.created_at DESC LIMIT 100";
+    $convs = $pdo->query($convsSql)->fetchAll();
+
+    // Active Chat Messages
+    if ($activePhone) {
+        $stmt = $pdo->prepare("SELECT * FROM whatsapp_messages WHERE phone = ? ORDER BY created_at ASC");
+        $stmt->execute([$activePhone]);
+        $messages = $stmt->fetchAll();
+    }
+} catch (Exception $e) {
+    $dbError = "Database Error: " . $e->getMessage();
 }
 ?>
 <!DOCTYPE html>
@@ -173,7 +182,15 @@ if ($activePhone) {
     <div class="main-content">
         <?php include 'includes/topbar.php'; ?>
         <div class="content-area">
-            <?php if(isset($successMsg)): ?><div class="alert alert-success"><i class="bi bi-check-circle"></i> <?= $successMsg ?></div><?php endif; ?>
+            <?php if(isset($successMsg)): ?><div class="alert alert-success"><?= $successMsg ?></div><?php endif; ?>
+            <?php if(isset($error)): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
+            <?php if(isset($dbError)): ?>
+                <div class="alert alert-warning">
+                    <b>System Setup Required:</b> Some database tables or columns are missing. 
+                    <a href="check_deployment.php" class="btn-primary btn-sm">Fix Database Now</a>
+                    <br><small><?= $dbError ?></small>
+                </div>
+            <?php endif; ?>
 
             <div class="tabs-nav">
                 <div class="tab-link <?= $activeTab==='chat'?'active':'' ?>" onclick="location.href='?tab=chat'">Chat Manager</div>
