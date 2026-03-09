@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     $trackingId = $_POST['tracking_id'] ?? null;
     $courierName = $_POST['courier_name'] ?? null;
     
-    $allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+    $allowed = ['pending', 'confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
     if (in_array($status, $allowed)) {
         // Get old status to check for change
         $stmtOld = $pdo->prepare("SELECT order_status, phone, order_number FROM orders WHERE id = ?");
@@ -32,19 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 
             // Only send WhatsApp if status changed
             if ($oldStatus !== $status) {
-                $waMsg = "";
                 if ($status === 'shipped') {
-                    $waMsg = "Your order #$orderNum has been shipped 🚚\nTracking ID: " . ($trackingId ?: 'N/A') . "\nCourier: " . ($courierName ?: 'Standard');
+                    sendShippingUpdate($id);
+                } elseif ($status === 'out_for_delivery') {
+                    sendOutForDelivery($id);
                 } elseif ($status === 'delivered') {
-                    $waMsg = "Order #$orderNum Delivered 🎉\nThank you for shopping with us!";
+                    sendDeliveredNotification($id);
                 } elseif ($status === 'cancelled') {
-                    $waMsg = "Your order #$orderNum has been cancelled. If you have any questions, please contact our support.";
+                    sendWhatsAppMessage($phone, "Your order #$orderNum has been cancelled. If you have any questions, please contact our support.", 'text', '', [], $id);
                 } elseif ($status === 'confirmed') {
-                    $waMsg = "Great news! Your order #$orderNum has been confirmed and is now being processed. 📦";
-                }
-
-                if ($waMsg) {
-                    sendWhatsAppMessage($phone, $waMsg, 'text', '', [], $id);
+                    sendWhatsAppMessage($phone, "Great news! Your order #$orderNum has been confirmed and is now being processed. 📦", 'text', '', [], $id);
                 }
             }
             header("Location: orders.php?success=1&id=$id"); exit;
@@ -52,32 +49,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
     }
 }
 
-// Resend Failed Logic
+
+// Resend Logic
 if (isset($_GET['resend']) && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
     $stmt->execute([$id]);
     $order = $stmt->fetch();
     
-    if ($order && ($order['whatsapp_status'] === 'failed' || isset($_GET['force']))) {
-        // Get Product Names
-        $stmtItems = $pdo->prepare("SELECT product_name FROM order_items WHERE order_id = ?");
-        $stmtItems->execute([$id]);
-        $pNames = $stmtItems->fetchAll(PDO::FETCH_COLUMN);
-        $pSummary = implode(', ', $pNames);
-        if(strlen($pSummary) > 40) $pSummary = substr($pSummary,0,37) . '...';
+    if ($order) {
+        if (isset($_GET['type']) && $_GET['type'] === 'cod') {
+            sendCODConfirmation($id);
+        } else {
+            // General Resend Confirmation (Legacy/Fallback)
+            $stmtItems = $pdo->prepare("SELECT product_name FROM order_items WHERE order_id = ?");
+            $stmtItems->execute([$id]);
+            $pNames = $stmtItems->fetchAll(PDO::FETCH_COLUMN);
+            $pSummary = implode(', ', $pNames);
+            if(strlen($pSummary) > 40) $pSummary = substr($pSummary,0,37) . '...';
 
-        $templateData = [
-            ["type" => "text", "text" => $order['name']],
-            ["type" => "text", "text" => $order['order_number'] . " (" . $pSummary . ")"],
-            ["type" => "text", "text" => formatPrice($order['total'])],
-            ["type" => "text", "text" => "Cash on Delivery"],
-            ["type" => "text", "text" => "3-5 Days. Reply 'CONFIRM' to verify!"]
-        ];
-        sendWhatsAppMessage($order['phone'], '', 'template', 'order_confirmation', $templateData, $id);
+            $templateData = [
+                ["type" => "text", "text" => $order['name']],
+                ["type" => "text", "text" => $order['order_number'] . " (" . $pSummary . ")"],
+                ["type" => "text", "text" => formatPrice($order['total'])],
+                ["type" => "text", "text" => strtoupper($order['payment_method'])],
+                ["type" => "text", "text" => "Processing..."]
+            ];
+            sendWhatsAppMessage($order['phone'], '', 'template', 'order_confirmation', $templateData, $id);
+        }
         header('Location: orders.php?success=resend'); exit;
     }
 }
+
 
 $search = $_GET['search'] ?? '';
 $statusFilter = $_GET['status'] ?? '';
@@ -116,7 +119,7 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $orders = $stmt->fetchAll();
 
-$statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+$statuses = ['pending', 'confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -186,11 +189,23 @@ $statuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
                     <span class="badge badge-delivered"><i class="bi bi-check2-all"></i> Sent</span>
                   <?php elseif($order['whatsapp_status'] === 'failed'): ?>
                     <span class="badge badge-cancelled" title="Error!"><i class="bi bi-exclamation-triangle"></i> Failed</span>
-                    <a href="?resend=1&id=<?= $order['id'] ?>" style="font-size:0.6rem; display:block; margin-top:0.2rem; color:var(--primary);">Resend Confirmation</a>
                   <?php else: ?>
                     <span class="badge badge-pending">Pending</span>
                   <?php endif; ?>
+
+                  <?php 
+                  $waConfirmed = $order['whatsapp_confirmed'] ?? 'pending';
+                  if ($waConfirmed !== 'pending'): ?>
+                    <div style="font-size:0.65rem; font-weight:700; margin-top:0.4rem; color:var(--primary);">
+                        <i class="bi bi-chat-left-dots"></i> RES: <?= strtoupper((string)$waConfirmed) ?>
+                    </div>
+                  <?php endif; ?>
+                  
+                  <?php if ($order['payment_method'] === 'cod' && $waConfirmed === 'pending'): ?>
+                    <a href="?resend=1&id=<?= $order['id'] ?>&type=cod" style="font-size:0.6rem; display:block; margin-top:0.4rem; color:var(--primary); text-decoration:underline;">Send COD Verify</a>
+                  <?php endif; ?>
                 </td>
+
                 <td>
                   <form method="POST">
                     <?= csrfField() ?>

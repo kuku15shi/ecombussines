@@ -1,7 +1,12 @@
 <div class="mobile-header">
-  <a href="<?= SITE_URL ?>/index" style="text-decoration:none;">
-    <div style="font-size: 1.35rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.5px;">✦ LuxeStore</div>
-  </a>
+  <div style="display: flex; align-items: center; gap: 0.75rem;">
+    <button class="nav-icon-btn" onclick="toggleMobileMenu()" style="width: 36px; height: 36px; font-size: 1.35rem; border: none; background: var(--glass);">
+      <i class="bi bi-list"></i>
+    </button>
+    <a href="<?= SITE_URL ?>/index" style="text-decoration:none;">
+      <div style="font-size: 1.35rem; font-weight: 900; background: linear-gradient(135deg, var(--primary), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.5px;">✦ LuxeStore</div>
+    </a>
+  </div>
   <div style="display: flex; align-items: center; gap: 0.75rem;">
     <div class="theme-toggle" id="mobileThemeToggle" onclick="toggleTheme()" title="Toggle Theme">
       <i class="bi bi-moon-stars moon-icon"></i>

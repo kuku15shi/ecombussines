@@ -27,8 +27,9 @@ function getWhatsAppConfig() {
 
 /**
  * Send WhatsApp Message using Meta API
+ * Enhanced to support Interactive Buttons and Templates with Parameters
  */
-function sendWhatsAppMessage($to, $messageBody, $type = 'template', $templateName = '', $templateData = [], $orderId = null) {
+function sendWhatsAppMessage($to, $messageBody, $type = 'text', $templateName = '', $templateData = [], $orderId = null) {
     global $pdo;
 
     $wa = getWhatsAppConfig();
@@ -42,16 +43,22 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'template', $templateNam
     ];
 
     if ($type === 'template') {
+        $components = [];
+        if (!empty($templateData)) {
+            $components[] = [
+                "type" => "body",
+                "parameters" => $templateData
+            ];
+        }
+        
         $data["template"] = [
             "name" => $templateName,
             "language" => ["code" => "en_US"],
-            "components" => [
-                [
-                    "type" => "body",
-                    "parameters" => $templateData
-                ]
-            ]
+            "components" => $components
         ];
+    } elseif ($type === 'interactive') {
+        // messageBody is expected to be the interactive array
+        $data["interactive"] = $messageBody;
     } else {
         $data["text"] = ["body" => $messageBody];
     }
@@ -65,7 +72,7 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'template', $templateNam
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonPayload);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // For local/hosting issues
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     
     $response = curl_exec($ch);
     $curlError = curl_error($ch);
@@ -83,19 +90,8 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'template', $templateNam
     // Log the API call
     try {
         $stmt = $pdo->prepare("INSERT INTO whatsapp_logs (order_id, phone, type, api_response, status, error_message) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$orderId, $to, ($type === 'template' ? $templateName : 'chat'), $response, $status, $errorMsg]);
-
-        // Update WhatsApp status in orders if relevant (check if column exists first to prevent fatal error)
-        if ($orderId && $templateName === 'order_confirmation') {
-            try {
-                $pdo->prepare("UPDATE orders SET whatsapp_status = ? WHERE id = ?")->execute([($status === 'success' ? 'sent' : 'failed'), $orderId]);
-            } catch (Exception $e) {
-                // Column might be missing on some environments
-                error_log("WhatsApp Status Update Failed (Check if column exists): " . $e->getMessage());
-            }
-        }
+        $stmt->execute([$orderId, $to, ($type === 'template' ? $templateName : $type), $response, $status, $errorMsg]);
     } catch (Exception $e) {
-        // Silently log DB errors if logging fails
         error_log("WhatsApp Logging Error: " . $e->getMessage());
     }
 
@@ -104,6 +100,188 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'template', $templateNam
         'response' => $resArr,
         'error' => $errorMsg
     ];
+}
+
+/**
+ * Send Order Delay Notification
+ */
+function sendOrderDelayNotification($orderId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    // Fetch product name from items if summary is missing
+    $pName = $order['product_summery'];
+    if (!$pName) {
+        $st = $pdo->prepare("SELECT product_name FROM order_items WHERE order_id = ? LIMIT 1");
+        $st->execute([$orderId]);
+        $pName = $st->fetchColumn() ?: 'Your ordered item';
+    }
+    
+    $date = $order['delivery_date'] ? date('j March', strtotime($order['delivery_date'])) : ($order['expected_delivery'] ?: 'Soon');
+    $trackLink = SITE_URL . "/track_order.php?order=" . $order['order_number'];
+
+    $msg = "📢 *Order Delay Update*\n\n" .
+           "Sorry, your order has been delayed due to an unexpected issue.\n\n" .
+           "Order ID: #" . $order['order_number'] . "\n" .
+           "Product: " . $pName . "\n\n" .
+           "Your order is important and we are tracking it closely.\n\n" .
+           "*New Delivery Date*: " . $date . "\n\n" .
+           "Track Order:\n" . $trackLink;
+
+    $interactive = [
+        "type" => "button",
+        "header" => ["type" => "text", "text" => "Order Update"],
+        "body" => ["text" => $msg],
+        "footer" => ["text" => "Thank you for your patience."],
+        "action" => [
+            "buttons" => [
+                ["type" => "reply", "reply" => ["id" => "track_" . $orderId, "title" => "Track Order"]]
+            ]
+        ]
+    ];
+
+    return sendWhatsAppMessage($order['phone'], $interactive, 'interactive', '', [], $orderId);
+}
+
+/**
+ * Send Shipping Update (Shipped)
+ */
+function sendShippingUpdate($orderId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    $trackLink = SITE_URL . "/track_order.php?order=" . $order['order_number'];
+
+    $msg = "📦 *Good News!*\n\n" .
+           "Your order *" . $order['order_number'] . "* has been shipped.\n\n" .
+           "Courier: " . ($order['courier_name'] ?: 'Standard') . "\n" .
+           "Tracking ID: " . ($order['tracking_id'] ?: 'N/A') . "\n\n" .
+           "Track your order:\n" . $trackLink;
+
+    return sendWhatsAppMessage($order['phone'], $msg, 'text', '', [], $orderId);
+}
+
+/**
+ * Send Out For Delivery Notification
+ */
+function sendOutForDelivery($orderId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    $msg = "🚚 *Out for Delivery*\n\n" .
+           "Your order *" . $order['order_number'] . "* is out for delivery today.\n\n" .
+           "Delivery Agent: " . ($order['delivery_agent_name'] ?: 'Our Executive') . "\n" .
+           "Phone: " . ($order['delivery_agent_phone'] ?: 'N/A');
+
+    return sendWhatsAppMessage($order['phone'], $msg, 'text', '', [], $orderId);
+}
+
+/**
+ * Send Delivered Notification
+ */
+function sendDeliveredNotification($orderId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    $msg = "🎉 *Order Delivered!*\n\n" .
+           "Your order *" . $order['order_number'] . "* has been delivered successfully.\n\n" .
+           "Thank you for shopping with *" . SITE_NAME . "* ❤️";
+
+    return sendWhatsAppMessage($order['phone'], $msg, 'text', '', [], $orderId);
+}
+
+/**
+ * Send Delivery Availability Confirmation
+ */
+function sendDeliveryAvailabilityConfirmation($orderId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    // Fetch product name
+    $pName = $order['product_summery'];
+    if (!$pName) {
+        $st = $pdo->prepare("SELECT product_name FROM order_items WHERE order_id = ? LIMIT 1");
+        $st->execute([$orderId]);
+        $pName = $st->fetchColumn() ?: 'Your ordered item';
+    }
+    
+    $msg = "🚚 *Delivery Update*\n\n" .
+           "Great news! Your order is ready for delivery.\n\n" .
+           "Order ID: #" . $order['order_number'] . "\n" .
+           "Product: " . $pName . "\n\n" .
+           "Please confirm your availability to receive the order today between:\n" .
+           "*7 AM – 11 PM*";
+
+    $interactive = [
+        "type" => "button",
+        "body" => ["text" => $msg],
+        "footer" => ["text" => "Reply by clicking a button below"],
+        "action" => [
+            "buttons" => [
+                ["type" => "reply", "reply" => ["id" => "del_yes_" . $orderId, "title" => "Yes, I'm available"]],
+                ["type" => "reply", "reply" => ["id" => "del_no_" . $orderId, "title" => "Reschedule"]],
+                ["type" => "reply", "reply" => ["id" => "del_cancel_" . $orderId, "title" => "Cancel order"]]
+            ]
+        ]
+    ];
+
+    return sendWhatsAppMessage($order['phone'], $interactive, 'interactive', '', [], $orderId);
+}
+
+/**
+ * Send COD Confirmation
+ */
+function sendCODConfirmation($orderId) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    // Fetch product name
+    $pName = $order['product_summery'];
+    if (!$pName) {
+        $st = $pdo->prepare("SELECT product_name FROM order_items WHERE order_id = ? LIMIT 1");
+        $st->execute([$orderId]);
+        $pName = $st->fetchColumn() ?: 'Your ordered item';
+    }
+    
+    $msg = "✅ *Order Confirmed!*\n\n" .
+           "Hi " . $order['name'] . " 👋\n\n" .
+           "Your order *" . $order['order_number'] . "* has been successfully placed.\n\n" .
+           "Product: " . $pName . "\n" .
+           "Payment: " . ($order['payment_method'] === 'cod' ? 'Cash on Delivery' : 'Online Payment') . "\n\n" .
+           "📦 *Expected Delivery*: " . ($order['expected_delivery'] ?: '3-5 Days');
+
+    $interactive = [
+        "type" => "button",
+        "body" => ["text" => $msg],
+        "footer" => ["text" => "Please confirm your order preference below:"],
+        "action" => [
+            "buttons" => [
+                ["type" => "reply", "reply" => ["id" => "cod_confirm_" . $orderId, "title" => "Confirm Order"]],
+                ["type" => "reply", "reply" => ["id" => "cod_cancel_" . $orderId, "title" => "Cancel Order"]],
+                ["type" => "reply", "reply" => ["id" => "support", "title" => "Talk to Support"]]
+            ]
+        ]
+    ];
+
+    return sendWhatsAppMessage($order['phone'], $interactive, 'interactive', '', [], $orderId);
 }
 
 /**
@@ -116,10 +294,7 @@ function trackOrderOnWhatsApp($orderId, $phone) {
     $orderId = trim($orderId);
     $phone = preg_replace('/[^0-9]/', '', $phone);
     
-    // Search by ID (since orders table has 'id' and 'order_number')
-    // Check both for convenience
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE (id = ? OR order_number = ?) AND (phone LIKE ? OR phone LIKE ?)");
-    // Phone matching (can be partial or with/without +91)
     $phoneParam = "%" . substr($phone, -10) . "%";
     $stmt->execute([$orderId, $orderId, $phoneParam, $phoneParam]);
     $order = $stmt->fetch();
@@ -128,18 +303,22 @@ function trackOrderOnWhatsApp($orderId, $phone) {
         return "Order not found or number mismatch.";
     }
 
-    $msg = "Order ID: " . $order['order_number'] . "\n" .
-           "Status: " . ucfirst($order['order_status']) . "\n" .
-           "Payment Status: " . ucfirst($order['payment_status']) . "\n";
-    
-    if ($order['order_status'] === 'shipped' && $order['tracking_id']) {
-        $msg .= "Tracking ID: " . $order['tracking_id'] . "\n" .
-                "Courier: " . ($order['courier_name'] ?: 'Standard') . "\n";
-    }
+    // Fetch product name
+    $st = $pdo->prepare("SELECT product_name FROM order_items WHERE order_id = ? LIMIT 1");
+    $st->execute([$order['id']]);
+    $pName = $st->fetchColumn() ?: 'Ordered Item';
 
-    if ($order['order_status'] === 'delivered') {
-        $msg .= "Thank you for shopping with us! 🎉";
-    }
+    $statusLabel = ucfirst($order['order_status']);
+    if ($order['order_status'] === 'out_for_delivery') $statusLabel = "Out for Delivery 🚚";
+
+    $msg = "📦 *Order Details*\n\n" .
+           "Order ID: " . $order['order_number'] . "\n" .
+           "Product: " . $pName . "\n" .
+           "Status: " . $statusLabel . "\n" .
+           "Expected Delivery: " . ($order['expected_delivery'] ?: 'Soon') . "\n\n" .
+           "Track here:\n" . SITE_URL . "/track_order.php?order=" . $order['order_number'];
 
     return $msg;
 }
+
+

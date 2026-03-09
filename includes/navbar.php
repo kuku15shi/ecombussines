@@ -76,46 +76,79 @@ $categories = getCategories($pdo);
 <!-- Mobile Sidebar (Offcanvas) -->
 <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileMenu()"></div>
 <div class="mobile-sidebar" id="mobileSidebar">
-  <div class="sidebar-header">
-    <div class="brand-logo">✦ LuxeStore</div>
+  <div class="sidebar-header" style="background: linear-gradient(135deg, var(--bg-dark), var(--glass));">
+    <div class="brand-logo" style="display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 1.5rem;">✦</span>
+      <span style="letter-spacing: -0.5px;">LuxeStore</span>
+    </div>
     <button class="close-btn" onclick="toggleMobileMenu()"><i class="bi bi-x-lg"></i></button>
   </div>
   
   <div class="sidebar-content">
+    <?php if($currentUser): ?>
+    <div class="menu-section user-welcome" style="background: var(--glass); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 2rem; border: 1px solid var(--glass-border);">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent2)); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; color: #fff; box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);">
+          <?= strtoupper(substr($currentUser['name'], 0, 1)) ?>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Welcome back,</div>
+          <div style="font-weight: 800; font-size: 1rem; color: var(--text-primary);"><?= explode(' ', $currentUser['name'])[0] ?></div>
+        </div>
+      </div>
+    </div>
+    <?php endif; ?>
+
     <div class="menu-section">
-      <div class="section-label">Main Menu</div>
+      <div class="section-label">Main Navigation</div>
       <a href="<?= SITE_URL ?>/index" class="menu-item <?= basename($_SERVER['PHP_SELF'])=='index.php'?'active':'' ?>">
-        <i class="bi bi-house"></i> Home
+        <i class="bi bi-house-heart"></i> Home
       </a>
       <a href="<?= SITE_URL ?>/products" class="menu-item <?= basename($_SERVER['PHP_SELF'])=='products.php'?'active':'' ?>">
-        <i class="bi bi-grid"></i> All Products
+        <i class="bi bi-grid-3x3-gap"></i> All Products
+      </a>
+      <a href="<?= SITE_URL ?>/cart" class="menu-item <?= basename($_SERVER['PHP_SELF'])=='cart.php'?'active':'' ?>">
+        <i class="bi bi-bag-heart"></i> My Shopping Cart
+      </a>
+      <a href="<?= SITE_URL ?>/wishlist" class="menu-item <?= basename($_SERVER['PHP_SELF'])=='wishlist.php'?'active':'' ?>">
+        <i class="bi bi-heart"></i> My Wishlist
       </a>
     </div>
 
     <div class="menu-section">
-      <div class="section-label">Categories</div>
-      <?php foreach($categories as $cat): ?>
-      <a href="<?= SITE_URL ?>/category/<?= $cat['slug'] ?>" class="menu-item">
-        <i class="<?= $cat['icon'] ?>"></i> <?= htmlspecialchars($cat['name']) ?>
-      </a>
-      <?php endforeach; ?>
+      <div class="section-label">Shop by Category</div>
+      <div style="display: grid; grid-template-columns: 1fr; gap: 0.25rem;">
+        <?php foreach($categories as $cat): ?>
+        <a href="<?= SITE_URL ?>/category/<?= $cat['slug'] ?>" class="menu-item">
+          <?php if (strlen($cat['icon']) > 5 || strpos($cat['icon'], 'bi-') !== false): ?>
+            <i class="<?= $cat['icon'] ?>"></i>
+          <?php else: ?>
+            <span style="width: 20px; text-align: center;"><?= $cat['icon'] ?></span>
+          <?php endif; ?>
+          <?= htmlspecialchars($cat['name']) ?>
+        </a>
+        <?php endforeach; ?>
+      </div>
     </div>
 
-    <div class="menu-section">
-      <div class="section-label">Account</div>
+    <div class="menu-section" style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+      <div class="section-label">User Account</div>
       <?php if($currentUser): ?>
       <a href="<?= SITE_URL ?>/profile" class="menu-item">
-        <i class="bi bi-person-circle"></i> My Profile
+        <i class="bi bi-person-circle"></i> My Profile Settings
       </a>
       <a href="<?= SITE_URL ?>/orders" class="menu-item">
-        <i class="bi bi-bag-check"></i> My Orders
+        <i class="bi bi-bag-check"></i> Order History
       </a>
-      <a href="<?= SITE_URL ?>/logout" class="menu-item" style="color:var(--danger) !important;">
+      <a href="<?= SITE_URL ?>/track_order" class="menu-item">
+        <i class="bi bi-truck"></i> Track Your Order
+      </a>
+      <a href="<?= SITE_URL ?>/logout" class="menu-item" style="color:var(--danger) !important; margin-top: 1rem; background: rgba(255, 101, 132, 0.1);">
         <i class="bi bi-box-arrow-right"></i> Logout
       </a>
       <?php else: ?>
-      <a href="<?= SITE_URL ?>/login" class="menu-item">
-        <i class="bi bi-box-arrow-in-right"></i> Login / Register
+      <a href="<?= SITE_URL ?>/login" class="menu-item active" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff !important;">
+        <i class="bi bi-box-arrow-in-right" style="color: #fff !important;"></i> Login / Register
       </a>
       <?php endif; ?>
     </div>

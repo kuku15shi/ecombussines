@@ -37,8 +37,12 @@ class WhatsAppBot {
 
     public function process() {
         // Check if bot is enabled globally
-        $botEnabled = ($this->pdo->query("SELECT config_value FROM whatsapp_config WHERE config_key = 'bot_enabled'")->fetchColumn() ?: '1') === '1';
+        $config = $this->pdo->query("SELECT config_key, config_value FROM whatsapp_config WHERE config_key IN ('bot_enabled', 'bot_welcome_msg', 'bot_fallback_msg')")->fetchAll(PDO::FETCH_KEY_PAIR);
+        $botEnabled = ($config['bot_enabled'] ?? '1') === '1';
         if (!$botEnabled) return null;
+
+        $this->welcomeMsg = $config['bot_welcome_msg'] ?? "👋 Hello! Welcome to *" . SITE_NAME . "*\nHow can I help you today?";
+        $this->fallbackMsg = $config['bot_fallback_msg'] ?? "Sorry, I didn't understand that. Reply MENU to see options.";
 
         // Reset bot on "hi", "hello", "start", "menu"
         if (in_array($this->text, ['hi', 'hello', 'start', 'menu', 'reset'])) {
@@ -46,8 +50,14 @@ class WhatsAppBot {
             return $this->mainMenu();
         }
 
+        // Help Desk Menu
+        if ($this->text === 'help' || $this->text === 'options') {
+            return $this->helpMenu();
+        }
+
         switch ($this->session['step']) {
             case 'start': return $this->handleMainMenu();
+            case 'track_order_id': return $this->handleTrackOrderId();
             case 'category_list': return $this->handleCategorySelection();
             case 'product_list': return $this->handleProductSelection();
             case 'product_details': return $this->handleProductAction();
@@ -65,6 +75,60 @@ class WhatsAppBot {
         }
     }
 
+    /**
+     * Handle Button Replies from Interactive Messages
+     */
+    public function handleButton($id) {
+        if ($id === 'support') return $this->handleMainMenu('5');
+        
+        if (strpos($id, 'track_') === 0) {
+            $orderId = substr($id, 6);
+            return trackOrderOnWhatsApp($orderId, $this->from);
+        }
+        
+        if (strpos($id, 'del_yes_') === 0) {
+            $orderId = substr($id, 8);
+            $this->pdo->prepare("UPDATE orders SET whatsapp_confirmed = 'confirmed' WHERE id = ?")->execute([$orderId]);
+            return "✅ Thank you! Your delivery is confirmed for today. Our agent will reach out soon.";
+        }
+        
+        if (strpos($id, 'del_no_') === 0) {
+            $orderId = substr($id, 7);
+            $this->pdo->prepare("UPDATE orders SET whatsapp_confirmed = 'reschedule' WHERE id = ?")->execute([$orderId]);
+            return "📅 No problem. We have marked your request for rescheduling. Our team will contact you for a new date.";
+        }
+        
+        if (strpos($id, 'del_cancel_') === 0) {
+            $orderId = substr($id, 11);
+            $this->pdo->prepare("UPDATE orders SET whatsapp_confirmed = 'cancelled', order_status = 'cancelled' WHERE id = ?")->execute([$orderId]);
+            return "❌ Order cancelled as per your request. If this was a mistake, please contact support.";
+        }
+
+        if (strpos($id, 'cod_confirm_') === 0) {
+            $orderId = substr($id, 12);
+            $this->pdo->prepare("UPDATE orders SET whatsapp_confirmed = 'confirmed' WHERE id = ?")->execute([$orderId]);
+            return "✅ Thank you for confirming! Your COD order is now being processed and will be shipped soon.";
+        }
+
+        if (strpos($id, 'cod_cancel_') === 0) {
+            $orderId = substr($id, 11);
+            $this->pdo->prepare("UPDATE orders SET whatsapp_confirmed = 'cancelled', order_status = 'cancelled' WHERE id = ?")->execute([$orderId]);
+            return "❌ Your order has been cancelled. Hope to see you again!";
+        }
+
+        return $this->process();
+    }
+
+    private function helpMenu() {
+        return "🛠️ *Customer Support Menu*\n\n" .
+               "1️⃣ Track Order\n" .
+               "2️⃣ Cancel Order\n" .
+               "3️⃣ Return Product\n" .
+               "4️⃣ Talk to Support Agent\n\n" .
+               "Reply with the number or type MENU.";
+    }
+
+
     private function getT($en, $ml = '', $hi = '') {
         $lang = $this->session['data']['lang'] ?? 'en';
         if ($lang == 'ml' && $ml) return $ml;
@@ -74,20 +138,7 @@ class WhatsAppBot {
 
     private function mainMenu() {
         $this->saveSession('start');
-        $lang = $this->session['data']['lang'] ?? null;
-        if (!$lang) {
-            $this->saveSession('select_lang');
-            return "Choose Language / ഭാഷ തിരഞ്ഞെടുക്കുക / भाषा चुनें:\n\n1️⃣ English\n2️⃣ Malayalam (മലയാളം)\n3️⃣ Hindi (हिंदी)";
-        }
-
-        return $this->getT("Hello 👋 Welcome to ", "നമസ്കാരം 👋 ", "नमस्ते 👋 ") . SITE_NAME . "!\n\n" .
-               $this->getT("How can I help you today?", "ഇന്ന് ഞാൻ എങ്ങനെ സഹായിക്കണം?", "मैं आज आपकी कैसे सहायता कर सकता हूँ?") . "\n\n" .
-               "1️⃣ " . $this->getT("View Products", "ഉൽപ്പന്നങ്ങൾ കാണുക", "उत्पाद देखें") . "\n" .
-               "2️⃣ " . $this->getT("Search Product", "തിരയുക", "उत्पाद खोजें") . "\n" .
-               "3️⃣ " . $this->getT("My Orders", "എന്റെ ഓർഡറുകൾ", "मेरे आदेश") . "\n" .
-               "4️⃣ " . $this->getT("Track Order", "ഓർഡർ ട്രാക്ക് ചെയ്യുക", "ऑर्डर ट्रैक करें") . "\n" .
-               "5️⃣ " . $this->getT("Talk to Support", "സഹായത്തിനായി", "बात करें") . "\n\n" .
-               $this->getT("Reply with the number.", "നമ്പർ ടൈപ്പ് ചെയ്യുക.", "नंबर के साथ उत्तर दें।");
+        return $this->welcomeMsg;
     }
 
     private function handleLangSelection() {
@@ -101,7 +152,13 @@ class WhatsAppBot {
     }
 
     private function aiFallback() {
-        // Simple "AI" - see if text matches any product names
+        // 1. Check FAQ Table
+        $stmt = $this->pdo->prepare("SELECT answer FROM bot_faqs WHERE is_active = 1 AND (FIND_IN_SET(?, keywords) OR keywords LIKE ?) LIMIT 1");
+        $stmt->execute([$this->text, '%' . $this->text . '%']);
+        $faq = $stmt->fetchColumn();
+        if ($faq) return $faq;
+
+        // 2. Simple Product Search
         $stmt = $this->pdo->prepare("SELECT id, name, price FROM products WHERE name LIKE ? AND is_active = 1 LIMIT 1");
         $stmt->execute(['%' . $this->text . '%']);
         $p = $stmt->fetch();
@@ -111,35 +168,35 @@ class WhatsAppBot {
                    $this->getT("Reply PRODUCT ", "", "") . $p['id'] . $this->getT(" to see details or BUY ", "", "") . strtoupper($p['name']) . $this->getT(" to order.", "", "");
         }
 
-        return $this->getT("Sorry, I didn't understand that. Reply MENU to see options.", "ക്ഷമിക്കണം, എനിക്ക് മനസ്സിലായില്ല. MENU എന്ന് ടൈപ്പ് ചെയ്യുക.", "क्षमा करें, मुझे समझ नहीं आया। विकल्प देखने के लिए MENU टाइप करें।");
+        return $this->fallbackMsg;
     }
 
-    private function handleMainMenu() {
-        if ($this->text == '1') {
-            $stmt = $this->pdo->query("SELECT * FROM categories WHERE is_active = 1 LIMIT 10");
-            $cats = $stmt->fetchAll();
-            $msg = "📂 *Our Product Categories*\n";
-            $map = [];
-            foreach ($cats as $i => $cat) {
-                $idx = $i + 1;
-                $msg .= "\n" . ($idx) . "️⃣ " . $cat['name'];
-                $map[$idx] = $cat['id'];
-            }
-            $this->saveSession('category_list', ['map' => $map]);
-            return $msg . "\n\nReply with category number.";
-        } elseif ($this->text == '2') {
-            $this->saveSession('search_query');
-            return "🔍 Please enter the product name you are looking for:";
-        } elseif ($this->text == '3') {
-            return $this->myOrders();
-        } elseif ($this->text == '4') {
-            $this->saveSession('start'); // Or specialized step
-            return "📍 To track your order, please type:\n*STATUS <OrderNumber>*\nExample: STATUS LUXE1234";
-        } elseif ($this->text == '5') {
-            return "💬 *Support Team*\n\n📞 +91 11111 22222\n📧 support@example.com\n\nReply MENU for main menu.";
+    private function handleMainMenu($forcedText = null) {
+        $input = $forcedText ?: $this->text;
+
+        if (in_array($input, ['1', '2', '3'])) {
+            $this->saveSession('track_order_id');
+            return "📦 Please enter your Order ID\nExample: ORD12345";
+        } elseif ($input == '4') {
+            return "👨‍💻 *Customer Support*\n\nPlease describe your issue.\nOur team will reply shortly.\n\nType MENU to return.";
         }
         return $this->mainMenu();
     }
+
+    private function handleTrackOrderId() {
+        $orderId = strtoupper($this->text);
+        $result = trackOrderOnWhatsApp($orderId, $this->from);
+        
+        if (strpos($result, 'Order Details') !== false) {
+             // If found, we can reset to start or keep it here
+             $this->saveSession('start');
+             return $result . "\n\nType MENU for more options.";
+        } else {
+             // Not found, maybe they want to try again or go back
+             return "❌ " . $result . "\n\nPlease check your Order ID and try again, or type MENU.";
+        }
+    }
+
 
     private function handleCategorySelection() {
         $map = $this->session['data']['map'] ?? [];

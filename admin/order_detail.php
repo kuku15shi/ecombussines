@@ -24,13 +24,55 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
     $courier_name = $_POST['courier_name'] ?? '';
     $tracking_url = $_POST['tracking_url'] ?? '';
     
-    $allowed = ['pending','processing','shipped','delivered','cancelled'];
+    $allowed = ['pending','confirmed','shipped','out_for_delivery','delivered','cancelled'];
     if (in_array($status, $allowed)) {
+        // Get old status
+        $stmtOld = $pdo->prepare("SELECT order_status FROM orders WHERE id=?");
+        $stmtOld->execute([$id]);
+        $oldStatus = $stmtOld->fetchColumn();
+
         $pdo->prepare("UPDATE orders SET order_status=?, tracking_id=?, courier_name=?, tracking_url=? WHERE id=?")->execute([$status, $tracking_id, $courier_name, $tracking_url, $id]);
+
+        if ($oldStatus !== $status) {
+            require_once __DIR__ . '/../includes/whatsapp_functions.php';
+            if ($status === 'shipped') sendShippingUpdate($id);
+            elseif ($status === 'out_for_delivery') sendOutForDelivery($id);
+            elseif ($status === 'delivered') sendDeliveredNotification($id);
+        }
     }
     header('Location: order_detail.php?id='.$id.'&success=1'); exit;
 }
+
+// Handle WhatsApp Actions
+if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['send_wa'])){
+    validateCsrf();
+    require_once __DIR__ . '/../includes/whatsapp_functions.php';
+    
+    $action = $_POST['send_wa'];
+    $delivery_date = $_POST['delivery_date'] ?? null;
+    
+    // Update delivery date if provided
+    if ($delivery_date) {
+        $pdo->prepare("UPDATE orders SET delivery_date = ? WHERE id = ?")->execute([$delivery_date, $id]);
+    }
+
+    $res = ['status' => 'fail', 'error' => 'Invalid action'];
+    if ($action === 'cod_confirm') {
+        $res = sendCODConfirmation($id);
+    } elseif ($action === 'delay_alert') {
+        $res = sendOrderDelayNotification($id);
+    } elseif ($action === 'delivery_confirm') {
+        $res = sendDeliveryAvailabilityConfirmation($id);
+    }
+
+    if ($res['status'] === 'success') {
+        header('Location: order_detail.php?id='.$id.'&wa_success=1'); exit;
+    } else {
+        $error = "WhatsApp Error: " . ($res['error'] ?? 'Unknown error');
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,7 +88,9 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
   <div class="main-content">
     <?php include 'includes/topbar.php'; ?>
     <div class="content-area">
+      <?php if(isset($error)): ?><div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> <?= $error ?></div><?php endif; ?>
       <?php if(isset($_GET['success'])): ?><div class="alert alert-success"><i class="bi bi-check-circle"></i> Order updated!</div><?php endif; ?>
+      <?php if(isset($_GET['wa_success'])): ?><div class="alert alert-success"><i class="bi bi-whatsapp"></i> WhatsApp notification sent successfully!</div><?php endif; ?>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.75rem;">
         <div>
           <a href="orders.php" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;"><i class="bi bi-arrow-left"></i> Back to Orders</a>
@@ -124,6 +168,41 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
               <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.2rem; border-top:1px solid var(--border); padding-top:0.75rem;"><span>Total</span><span style="color:var(--primary);"><?= formatPrice($order['total']) ?></span></div>
             </div>
           </div>
+          <!-- WhatsApp Actions -->
+          <div class="form-card">
+            <div style="font-weight:700; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                <i class="bi bi-whatsapp text-success"></i> WhatsApp Actions
+            </div>
+            
+            <?php 
+            $waConfirmed = $order['whatsapp_confirmed'] ?? 'pending';
+            if ($waConfirmed !== 'pending'): ?>
+            <div class="alert alert-info" style="font-size: 0.8rem; padding: 0.5rem 0.75rem;">
+                <i class="bi bi-info-circle"></i> Customer Response: <strong><?= strtoupper((string)$waConfirmed) ?></strong>
+            </div>
+            <?php endif; ?>
+
+            <form method="POST" style="display:flex; flex-direction:column; gap:0.75rem;">
+                <?= csrfField() ?>
+                <div class="form-group">
+                    <label class="form-label" style="font-size:0.75rem;">Delivery Date (for delay/availability)</label>
+                    <input type="date" name="delivery_date" class="form-control" value="<?= $order['delivery_date'] ?? '' ?>">
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr; gap:0.5rem;">
+                    <button type="submit" name="send_wa" value="cod_confirm" class="btn-outline" style="font-size:0.8rem; justify-content:center;">
+                        <i class="bi bi-check2-circle"></i> COD Confirmation
+                    </button>
+                    <button type="submit" name="send_wa" value="delay_alert" class="btn-outline" style="font-size:0.8rem; justify-content:center;">
+                        <i class="bi bi-clock-history"></i> Delay Alert
+                    </button>
+                    <button type="submit" name="send_wa" value="delivery_confirm" class="btn-outline" style="font-size:0.8rem; justify-content:center;">
+                        <i class="bi bi-truck"></i> Delivery Availability
+                    </button>
+                </div>
+            </form>
+          </div>
+
           <!-- Update Status -->
           <div class="form-card">
             <div style="font-weight:700; margin-bottom:1rem;">Update Order Status</div>
@@ -132,7 +211,7 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
               <div class="form-group">
                 <label class="form-label">Order Status</label>
                 <select name="status" class="form-control" style="margin-bottom:1rem;">
-                  <?php foreach(['pending','processing','shipped','delivered','cancelled'] as $s): ?>
+                  <?php foreach(['pending','confirmed','shipped','out_for_delivery','delivered','cancelled'] as $s): ?>
                   <option value="<?= $s ?>" <?= $order['order_status']===$s?'selected':'' ?>><?= ucfirst($s) ?></option>
                   <?php endforeach; ?>
                 </select>
@@ -152,6 +231,7 @@ if($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['update_status'])){
               <button type="submit" name="update_status" class="btn-primary" style="width:100%; justify-content:center;">Update Status</button>
             </form>
           </div>
+
         </div>
       </div>
     </div>

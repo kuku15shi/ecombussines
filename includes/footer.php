@@ -46,9 +46,9 @@
         <div class="footer-copyright">
           <p class="copyright-text">© <?= date('Y') ?> LuxeStore. All rights reserved.</p>
           <div class="legal-links">
-            <a href="#">Privacy Policy</a>
+            <a href="<?= SITE_URL ?>/privacy">Privacy Policy</a>
             <span>•</span>
-            <a href="#">Terms of Service</a>
+            <a href="<?= SITE_URL ?>/terms">Terms of Service</a>
           </div>
         </div>
         

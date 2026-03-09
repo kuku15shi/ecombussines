@@ -31,15 +31,23 @@ if (!isset($data['entry'][0]['changes'][0]['value']['messages'][0])) {
 
 $message = $data['entry'][0]['changes'][0]['value']['messages'][0];
 $from = $message['from']; // Customer Phone
-$text = strtolower(trim($message['text']['body'] ?? ''));
 $messageId = $message['id'];
+$text = '';
+$buttonId = '';
 
-file_put_contents(__DIR__ . '/webhook_debug.log', date('[Y-m-d H:i:s] ') . "Message from: $from | Text: $text\n", FILE_APPEND);
+if (isset($message['text']['body'])) {
+    $text = trim($message['text']['body']);
+} elseif (isset($message['interactive']['button_reply']['id'])) {
+    $buttonId = $message['interactive']['button_reply']['id'];
+    $text = $message['interactive']['button_reply']['title'];
+}
+
+file_put_contents(__DIR__ . '/webhook_debug.log', date('[Y-m-d H:i:s] ') . "Message from: $from | Text: $text | ButtonID: $buttonId\n", FILE_APPEND);
 
 // Store Incoming Message
 try {
     $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, message_id, status) VALUES (?, ?, 'incoming', ?, 'received')")
-        ->execute([$from, $text, $messageId]);
+        ->execute([$from, $text ?: ($buttonId ? "Button: $buttonId" : "Other"), $messageId]);
 } catch (Exception $e) {
     error_log("Webhook DB Error: " . $e->getMessage());
 }
@@ -48,7 +56,12 @@ try {
 require_once __DIR__ . '/bot_engine.php';
 
 $bot = new WhatsAppBot($pdo, $from, $text);
-$reply = $bot->process();
+if ($buttonId) {
+    $reply = $bot->handleButton($buttonId);
+} else {
+    $reply = $bot->process();
+}
+
 
 if ($reply) {
     // Send Outgoing Reply

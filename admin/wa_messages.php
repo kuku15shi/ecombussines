@@ -5,9 +5,41 @@ require_once __DIR__ . '/../config/functions.php';
 require_once __DIR__ . '/../includes/whatsapp_functions.php';
 
 requireAdminLogin();
-$pageTitle = 'WhatsApp Dashboard';
+$pageTitle = 'WhatsApp Manager';
 
-// Handle Settings Update
+// Handle Macro Save
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_macro'])) {
+    validateCsrf();
+    $title = trim($_POST['title']);
+    $content = trim($_POST['content']);
+    if ($title && $content) {
+        $pdo->prepare("INSERT INTO whatsapp_macros (title, content) VALUES (?, ?)")->execute([$title, $content]);
+        $successMsg = "Macro saved!";
+    }
+}
+
+// Handle Template Update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_template'])) {
+    validateCsrf();
+    $id = (int)$_POST['id'];
+    $content = trim($_POST['content']);
+    $pdo->prepare("UPDATE whatsapp_templates SET content = ? WHERE id = ?")->execute([$content, $id]);
+    $successMsg = "Template updated!";
+}
+
+// Handle FAQ Save
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_faq'])) {
+    validateCsrf();
+    $q = trim($_POST['question']);
+    $a = trim($_POST['answer']);
+    $k = trim($_POST['keywords'] ?: '');
+    if ($q && $a) {
+        $pdo->prepare("INSERT INTO bot_faqs (question, answer, keywords) VALUES (?, ?, ?)")->execute([$q, $a, $k]);
+        $successMsg = "FAQ added!";
+    }
+}
+
+// Handle Bot Settings Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_wa_config'])) {
     validateCsrf();
     $configs = [
@@ -15,24 +47,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_wa_config'])) 
         'wa_phone_number_id' => trim($_POST['wa_phone_number_id'] ?? ''),
         'wa_version' => trim($_POST['wa_version'] ?? 'v20.0'),
         'wa_webhook_token' => trim($_POST['wa_webhook_token'] ?? ''),
-        'bot_enabled' => $_POST['bot_enabled'] ?? '1'
+        'bot_enabled' => $_POST['bot_enabled'] ?? '1',
+        'bot_welcome_msg' => trim($_POST['bot_welcome_msg'] ?? "👋 Hello! Welcome to *" . SITE_NAME . "*\nHow can I help you today?"),
+        'bot_fallback_msg' => trim($_POST['bot_fallback_msg'] ?? "Sorry, I didn't understand that. Reply MENU to see options.")
     ];
+    $stmt = $pdo->prepare("INSERT INTO whatsapp_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
+    foreach ($configs as $key => $val) { $stmt->execute([$key, $val]); }
+    $successMsg = "Settings updated!";
+}
 
-    try {
-        $pdo->exec("CREATE TABLE IF NOT EXISTS whatsapp_config (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            config_key VARCHAR(50) UNIQUE NOT NULL,
-            config_value TEXT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        )");
+// Handle Chat Assignment
+if (isset($_GET['assign_phone']) && isset($_GET['agent_id'])) {
+    $phone = $_GET['assign_phone'];
+    $agentId = (int)$_GET['agent_id'];
+    $pdo->prepare("UPDATE whatsapp_messages SET assigned_to = ? WHERE phone = ?")->execute([$agentId, $phone]);
+    header("Location: wa_messages.php?phone=" . urlencode($phone) . "&success=Assigned"); exit;
+}
 
-        $stmt = $pdo->prepare("INSERT INTO whatsapp_config (config_key, config_value) VALUES (?, ?) 
-                            ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)");
-        foreach ($configs as $key => $val) {
-            $stmt->execute([$key, $val]);
+// Handle Manual Reply
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
+    validateCsrf();
+    $phone = $_POST['phone'] ?? '';
+    $message = $_POST['message'] ?? '';
+    if ($phone && $message) {
+        $res = sendWhatsAppMessage($phone, $message, 'text');
+        if ($res['status'] === 'success') {
+            $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
+                ->execute([$phone, $message]);
+            header("Location: wa_messages.php?tab=chat&phone=" . urlencode($phone) . "&success=Sent"); exit;
+        } else {
+            $error = "WhatsApp Error: " . $res['error'];
         }
-        $successMsg = "Settings updated successfully!";
-    } catch (Exception $e) { $error = "Config Error: " . $e->getMessage(); }
+    }
 }
 
 // Handle Broadcast
@@ -45,268 +91,443 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_broadcast'])) {
         $count = 0;
         foreach($customers as $phone) {
             $res = sendWhatsAppMessage($phone, $message, 'text');
-            if($res['status'] === 'success') $count++;
+            if($res['status'] === 'success') {
+                $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
+                    ->execute([$phone, $message]);
+                $count++;
+            }
         }
         $successMsg = "Broadcast sent successfully to $count customers!";
     }
 }
 
-// Test Connection handler
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['test_connection'])) {
-    validateCsrf();
-    $testPhone = $_POST['test_phone'] ?? '';
-    if($testPhone) {
-        $res = sendWhatsAppMessage($testPhone, "Hello! This is a test message from " . SITE_NAME . ". Connection is working! ✅", 'text');
-        if($res['status'] === 'success') {
-            $successMsg = "Test message sent successfully to $testPhone!";
-        } else {
-            $error = "Test Failed: " . ($res['error'] ?? 'Unknown API Error');
-        }
-    }
-}
-
-// Manual Reply handler
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
-    validateCsrf();
-    $phone = $_POST['phone'] ?? '';
-    $message = $_POST['message'] ?? '';
-    
-    if ($phone && $message) {
-        $res = sendWhatsAppMessage($phone, $message, 'text');
-        if ($res['status'] === 'success') {
-            try {
-                $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-                    ->execute([$phone, $message]);
-                header('Location: wa_messages.php?success=1&phone=' . urlencode($phone)); exit;
-            } catch (Exception $e) { $error = "DB Error: " . $e->getMessage(); }
-        } else {
-            $error = "WhatsApp Error: " . ($res['error'] ?? 'Unknown Error');
-        }
-    }
-}
-
 $activeTab = $_GET['tab'] ?? 'chat';
 $activePhone = $_GET['phone'] ?? '';
+
+// Fetch Data
+$macros = $pdo->query("SELECT * FROM whatsapp_macros ORDER BY title ASC")->fetchAll();
+$templates = $pdo->query("SELECT * FROM whatsapp_templates ORDER BY name ASC")->fetchAll();
+$faqs = $pdo->query("SELECT * FROM bot_faqs ORDER BY id DESC")->fetchAll();
+$configs = $pdo->query("SELECT config_key, config_value FROM whatsapp_config")->fetchAll(PDO::FETCH_KEY_PAIR);
+$admins = $pdo->query("SELECT id, name FROM admin ORDER BY name ASC")->fetchAll();
+
+// Conversations grouped by phone
+$convsSql = "SELECT m1.phone, m1.message as last_msg, m1.created_at, m1.assigned_to, m1.chat_status,
+            (SELECT COUNT(*) FROM whatsapp_messages WHERE phone = m1.phone AND direction = 'incoming' AND status = 'received') as unread 
+            FROM whatsapp_messages m1 
+            INNER JOIN (SELECT phone, MAX(id) as max_id FROM whatsapp_messages GROUP BY phone) m2 ON m1.id = m2.max_id 
+            ORDER BY m1.created_at DESC LIMIT 100";
+$convs = $pdo->query($convsSql)->fetchAll();
+
+// Active Chat Messages
 $messages = [];
 if ($activePhone) {
     $stmt = $pdo->prepare("SELECT * FROM whatsapp_messages WHERE phone = ? ORDER BY created_at ASC");
     $stmt->execute([$activePhone]);
     $messages = $stmt->fetchAll();
-    $activeTab = 'chat';
 }
-
-// Fetch Configs
-$dbConfig = [];
-try {
-    $res = $pdo->query("SELECT config_key, config_value FROM whatsapp_config")->fetchAll(PDO::FETCH_KEY_PAIR);
-    $dbConfig = $res;
-} catch (Exception $e) {}
-
-// Get unique conversations
-$convs = [];
-try {
-    $convs = $pdo->query("SELECT phone, MAX(created_at) as last_msg, 
-           (SELECT message FROM whatsapp_messages WHERE phone = t.phone ORDER BY created_at DESC LIMIT 1) as last_text 
-           FROM (SELECT DISTINCT phone, created_at FROM whatsapp_messages) as t 
-           GROUP BY phone ORDER BY last_msg DESC LIMIT 50")->fetchAll();
-} catch (Exception $e) {}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WhatsApp & Chatbot – Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-  <link href="css/admin.css" rel="stylesheet">
-  <style>
-    .wa-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); }
-    .wa-tab-btn { padding: 0.75rem 1.5rem; cursor: pointer; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid transparent; transition: 0.2s; }
-    .wa-tab-btn:hover { color: var(--primary); }
-    .wa-tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(108,99,255,0.05); }
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp & Chat Manager – Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="css/admin.css" rel="stylesheet">
+    <style>
+        .wa-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 180px); background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); overflow: hidden; }
+        .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); }
+        .wa-chat-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+        .wa-chat-item { padding: 0.875rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.25rem; cursor: pointer; transition: 0.2s; position: relative; }
+        .wa-chat-item:hover { background: rgba(255,255,255,0.05); }
+        .wa-chat-item.active { background: rgba(108,99,255,0.1); border: 1px solid var(--glass-border); }
+        .unread-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: absolute; right: 1rem; top: 1.25rem; }
+        
+        .chat-view { display: flex; flex-direction: column; background: rgba(0,0,0,0.02); }
+        .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); }
+        .chat-body { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .msg { max-width: 75%; padding: 0.75rem 1rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; position: relative; }
+        .msg.incoming { align-self: flex-start; background: var(--glass); border-bottom-left-radius: 2px; }
+        .msg.outgoing { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
+        .msg-time { font-size: 0.65rem; opacity: 0.6; margin-top: 4px; text-align: right; }
+        
+        .chat-footer { padding: 1.25rem; border-top: 1px solid var(--border); background: var(--card-bg); }
+        .reply-box { display: flex; gap: 0.75rem; align-items: flex-end; }
+        .reply-box textarea { flex: 1; min-height: 48px; max-height: 150px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 0.75rem; color: var(--text-primary); outline: none; resize: none; }
+        
+        .quick-replies { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem; }
+        .qr-btn { padding: 0.4rem 0.8rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--text-secondary); }
+        .qr-btn:hover { background: var(--primary); color: #fff; }
 
-    .chat-container {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      height: calc(100vh - 240px);
-      overflow: hidden;
-    }
-    .chat-sidebar { border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; }
-    .chat-list { flex: 1; overflow-y: auto; padding: 0.75rem; }
-    .chat-item { padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
-    .chat-item:hover { background: rgba(255,255,255,0.05); }
-    .chat-item.active { background: rgba(255,255,255,0.1); border-color: var(--primary); }
-    .chat-main { display: flex; flex-direction: column; background: rgba(0,0,0,0.1); overflow: hidden; }
-    .chat-header { padding: 1.25rem; border-bottom: 1px solid var(--glass-border); background: var(--glass); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .message-bubble { max-width: 70%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; position: relative; }
-    .message-bubble.incoming { background: var(--glass); align-self: flex-start; border-bottom-left-radius: 2px; }
-    .message-bubble.outgoing { background: var(--primary); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
-    .message-time { font-size: 0.65rem; opacity: 0.6; margin-top: 0.4rem; text-align: right; }
-    .chat-input-area { padding: 1.25rem; background: var(--glass); border-top: 1px solid var(--glass-border); flex-shrink: 0; }
-    .chat-input-box { display: flex; gap: 0.75rem; }
-    .chat-input-box textarea { flex: 1; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: var(--text-primary); padding: 0.75rem; min-height: 48px; max-height: 120px; outline: none; transition: 0.2s; resize: none; font-family: var(--font); font-size: 0.875rem; }
-    .chat-back-btn { display: none; margin-right: 0.75rem; }
-
-    @media (max-width: 767px) {
-      .chat-container { grid-template-columns: 1fr; height: calc(100vh - 200px); }
-      .chat-container.chat-open .chat-sidebar { display: none; }
-      .chat-container:not(.chat-open) .chat-main { display: none; }
-      .chat-back-btn { display: inline-flex !important; }
-    }
-  </style>
+        .tabs-nav { display: flex; gap: 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+        .tab-link { padding: 0.75rem 0.25rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab-link:hover { color: var(--primary); }
+        .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
+    </style>
 </head>
 <body>
 <div class="admin-layout">
-  <?php include 'includes/sidebar.php'; ?>
-  <div class="main-content">
-    <?php include 'includes/topbar.php'; ?>
-    <div class="content-area">
-      <?php if(isset($error)): ?><div class="alert alert-danger"><?= $error ?></div><?php endif; ?>
-      <?php if(isset($successMsg)): ?><div class="alert alert-success"><?= $successMsg ?></div><?php endif; ?>
-      <?php if(isset($_GET['success'])): ?><div class="alert alert-success">Message sent!</div><?php endif; ?>
+    <?php include 'includes/sidebar.php'; ?>
+    <div class="main-content">
+        <?php include 'includes/topbar.php'; ?>
+        <div class="content-area">
+            <?php if(isset($successMsg)): ?><div class="alert alert-success"><i class="bi bi-check-circle"></i> <?= $successMsg ?></div><?php endif; ?>
 
-      <div class="wa-tabs">
-        <div class="wa-tab-btn <?= $activeTab==='chat'?'active':'' ?>" onclick="location.href='wa_messages.php?tab=chat'">Chat Messages</div>
-        <div class="wa-tab-btn <?= $activeTab==='broadcast'?'active':'' ?>" onclick="location.href='wa_messages.php?tab=broadcast'">Broadcast Messages</div>
-        <div class="wa-tab-btn <?= $activeTab==='settings'?'active':'' ?>" onclick="location.href='wa_messages.php?tab=settings'">Bot Settings</div>
-      </div>
-
-      <?php if($activeTab === 'broadcast'): ?>
-      <div class="data-table-card" style="padding: 2rem; max-width: 800px;">
-        <h3 style="margin-bottom: 1.5rem;">Marketing Broadcast</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">Send a marketing message to all customers who have previously ordered. (Requires pre-approved Marketing Template in Meta for scale).</p>
-        
-        <form method="POST">
-          <?= csrfField() ?>
-          <div class="form-group mb-4">
-            <label class="form-label">Message Content</label>
-            <textarea name="broadcast_message" class="filter-input" style="height: 120px;" placeholder="🔥 Special Offer Today! Flat 20% OFF..."></textarea>
-          </div>
-          <button type="submit" name="send_broadcast" class="btn-primary" style="width: 100%; justify-content: center; padding: 1rem;">
-            <i class="bi bi-megaphone" style="margin-right: 0.5rem;"></i> Send to All Customers
-          </button>
-        </form>
-      </div>
-
-      <?php elseif($activeTab === 'chat'): ?>
-      <div class="chat-container<?= $activePhone ? ' chat-open' : '' ?>" id="chatContainer">
-        <div class="chat-sidebar">
-          <div style="padding: 1.5rem; border-bottom: 1px solid var(--glass-border);">
-            <h3 style="margin:0; font-weight:800; font-size:1.1rem;">Conversations</h3>
-          </div>
-          <div class="chat-list">
-            <?php foreach($convs as $c): ?>
-            <div class="chat-item <?= $activePhone===$c['phone']?'active':'' ?>" onclick="location.href='?phone=<?= $c['phone'] ?>'">
-              <div style="font-weight:700; font-size:0.9rem;"><?= $c['phone'] ?></div>
-              <div style="font-size:0.75rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:0.25rem;">
-                <?= htmlspecialchars($c['last_text'] ?? '...') ?>
-              </div>
+            <div class="tabs-nav">
+                <div class="tab-link <?= $activeTab==='chat'?'active':'' ?>" onclick="location.href='?tab=chat'">Chat Manager</div>
+                <div class="tab-link <?= $activeTab==='delivery'?'active':'' ?>" onclick="location.href='?tab=delivery'">Delivery Notifications</div>
+                <div class="tab-link <?= $activeTab==='bot'?'active':'' ?>" onclick="location.href='?tab=bot'">Bot Automation</div>
+                <div class="tab-link <?= $activeTab==='broadcast'?'active':'' ?>" onclick="location.href='?tab=broadcast'">Broadcast</div>
+                <div class="tab-link <?= $activeTab==='settings'?'active':'' ?>" onclick="location.href='?tab=settings'">API Settings</div>
             </div>
-            <?php endforeach; ?>
-            <?php if(empty($convs)): ?><div style="text-align:center; padding:2rem; color:var(--text-muted);">No messages yet</div><?php endif; ?>
-          </div>
+
+            <?php if($activeTab === 'chat'): ?>
+            <div class="wa-layout">
+                <div class="wa-sidebar">
+                    <div class="wa-search">
+                        <input type="text" class="filter-input w-100" placeholder="🔍 Search phone or message...">
+                    </div>
+                    <div class="wa-chat-list">
+                        <?php foreach($convs as $c): ?>
+                        <div class="wa-chat-item <?= $activePhone===$c['phone']?'active':'' ?>" onclick="location.href='?tab=chat&phone=<?= $c['phone'] ?>'">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                                <span style="font-weight:700; font-size:0.9rem;"><?= $c['phone'] ?></span>
+                                <span style="font-size:0.65rem; color:var(--text-muted);"><?= date('H:i', strtotime($c['created_at'])) ?></span>
+                            </div>
+                            <div style="font-size:0.75rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:90%;">
+                                <?= htmlspecialchars($c['last_msg']) ?>
+                            </div>
+                            <?php if($c['unread'] > 0): ?><div class="unread-dot"></div><?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="chat-view">
+                    <?php if($activePhone): ?>
+                    <div class="chat-header">
+                        <div>
+                            <div style="font-weight:800;"><?= $activePhone ?></div>
+                            <div style="font-size:0.7rem; color:var(--text-muted);">
+                                Assigned: 
+                                <select onchange="location.href='?tab=chat&phone=<?= $activePhone ?>&assign_phone=<?= $activePhone ?>&agent_id='+this.value">
+                                    <option value="">Unassigned</option>
+                                    <?php foreach($admins as $adm): ?>
+                                    <option value="<?= $adm['id'] ?>" <?= ($messages[0]['assigned_to'] ?? '') == $adm['id'] ? 'selected' : '' ?>><?= $adm['name'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:0.5rem;">
+                            <a href="orders.php?search=<?= $activePhone ?>" class="btn-primary btn-sm">Orders</a>
+                            <button class="btn-icon" title="Resolve Chat"><i class="bi bi-check2-circle"></i></button>
+                        </div>
+                    </div>
+                    <div class="chat-body" id="chatWindow">
+                        <?php foreach($messages as $m): ?>
+                        <div class="msg <?= $m['direction'] ?>">
+                            <?= nl2br(htmlspecialchars($m['message'])) ?>
+                            <div class="msg-time"><?= date('h:i A', strtotime($m['created_at'])) ?></div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="chat-footer">
+                        <div class="quick-replies">
+                            <button class="qr-btn" onclick="toggleMacroModal()">+ Add Macro</button>
+                            <?php foreach($macros as $mac): ?>
+                            <button class="qr-btn" onclick="applyMacro('<?= addslashes($mac['content']) ?>')"><?= htmlspecialchars($mac['title']) ?></button>
+                            <?php endforeach; ?>
+                        </div>
+                        <form method="POST" action="wa_messages.php?phone=<?= $activePhone ?>&tab=chat">
+                            <?= csrfField() ?>
+                            <input type="hidden" name="phone" value="<?= $activePhone ?>">
+                            <input type="hidden" name="send_reply" value="1">
+                            <div class="reply-box">
+                                <textarea name="message" id="messageInput" placeholder="Type your message..." required></textarea>
+                                <button type="submit" class="btn-primary" style="padding: 0.8rem;"><i class="bi bi-send-fill"></i></button>
+                            </div>
+                        </form>
+                    </div>
+                    <?php else: ?>
+                    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted);">
+                        <i class="bi bi-whatsapp" style="font-size:4rem; margin-bottom:1rem; opacity:0.1;"></i>
+                        <p>Select a customer to start chatting</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php elseif($activeTab === 'delivery'): ?>
+            <div class="grid-2-1 admin-grid-2-1">
+                <div class="data-table-card">
+                    <div class="data-table-header">
+                        <div class="data-table-title">Notification Templates</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead><tr><th>Name</th><th>Content</th><th>Action</th></tr></thead>
+                            <tbody>
+                                <?php foreach($templates as $t): ?>
+                                <tr>
+                                    <td style="font-weight:700;"><?= strtoupper(str_replace('_',' ',$t['name'])) ?></td>
+                                    <td>
+                                        <form method="POST" id="form-t-<?= $t['id'] ?>">
+                                            <?= csrfField() ?>
+                                            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+                                            <input type="hidden" name="update_template" value="1">
+                                            <textarea name="content" class="form-control" style="font-size:0.8rem; min-height:80px;"><?= htmlspecialchars($t['content']) ?></textarea>
+                                        </form>
+                                    </td>
+                                    <td><button type="submit" form="form-t-<?= $t['id'] ?>" class="btn-primary btn-sm">Save</button></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="form-card">
+                    <h3 style="margin-bottom:1.5rem;">Send Delivery Update</h3>
+                    <form method="POST">
+                        <div class="form-group">
+                            <label class="form-label">Order ID / Order Number</label>
+                            <input type="text" name="order_identifier" class="form-control" placeholder="e.g. ORD12345">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Update Type</label>
+                            <select name="notif_type" class="form-control">
+                                <option value="order_delay">Order Delay Update</option>
+                                <option value="delivery_avail">Delivery Availability</option>
+                                <option value="order_shipped">Shipping Status</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-primary" style="width:100%; justify-content:center;" onclick="previewNotif()">Fetch Order & Preview</button>
+                    </form>
+
+                    <div id="notifPreviewArea" style="margin-top:2rem; display:none; padding-top:2rem; border-top:1px solid var(--border);">
+                        <h4 style="margin-bottom:1rem; font-size:0.9rem;">Message Preview</h4>
+                        <input type="hidden" id="notifPhone">
+                        <input type="hidden" id="notifOrderId">
+                        <textarea id="notifPreviewText" class="form-control" style="min-height:120px; font-family:var(--font); font-size:0.85rem; border-color:var(--primary);"></textarea>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin:0.5rem 0 1.25rem;">You can edit the message before sending.</p>
+                        <button type="button" class="btn-primary" style="width:100%; justify-content:center;" onclick="sendNotif()">
+                            <i class="bi bi-send-fill"></i> Send Notification Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <?php elseif($activeTab === 'bot'): ?>
+            <div class="grid-2-1 admin-grid-2-1">
+                <div class="data-table-card">
+                    <div class="data-table-header">
+                        <div class="data-table-title">FAQ Auto-Responses</div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="admin-table">
+                            <thead><tr><th>Question</th><th>Keywords</th><th style="width:70px;">Status</th></tr></thead>
+                            <tbody>
+                                <?php foreach($faqs as $f): ?>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight:700; color:var(--text-primary);"><?= htmlspecialchars($f['question']) ?></div>
+                                        <div style="font-size:0.75rem; margin-top:0.25rem;">Ans: <?= htmlspecialchars($f['answer']) ?></div>
+                                    </td>
+                                    <td><code><?= htmlspecialchars($f['keywords']) ?></code></td>
+                                    <td><span class="badge badge-active">Active</span></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="form-card">
+                    <h3 style="margin-bottom:1.5rem;">Add FAQ</h3>
+                    <form method="POST">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="save_faq" value="1">
+                        <div class="form-group">
+                            <label class="form-label">Customer Question</label>
+                            <input type="text" name="question" class="form-control" required placeholder="What is return policy?">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Auto Reply</label>
+                            <textarea name="answer" class="form-control" required placeholder="Our return policy is..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Keywords (Comma separated)</label>
+                            <input type="text" name="keywords" class="form-control" placeholder="return, refund, policy">
+                        </div>
+                        <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Save FAQ</button>
+                    </form>
+                </div>
+            </div>
+
+            <?php elseif($activeTab === 'broadcast'): ?>
+            <!-- Same as before but with better layout -->
+            <div class="form-card" style="max-width: 700px; margin: 0 auto;">
+                <h2 style="margin-bottom:1rem;">Marketing Broadcast</h2>
+                <p class="text-muted" style="margin-bottom:2rem;">Send a direct WhatsApp message to all customers in your database.</p>
+                <form method="POST">
+                    <?= csrfField() ?>
+                    <div class="form-group">
+                        <label class="form-label">Message Content</label>
+                        <textarea name="broadcast_message" class="form-control" style="min-height:150px;" placeholder="Write your offer here..."></textarea>
+                    </div>
+                    <button type="submit" name="send_broadcast" class="btn-primary" style="width:100%; justify-content:center; padding:1rem;">
+                        <i class="bi bi-megaphone"></i> Send to All Customers
+                    </button>
+                </form>
+            </div>
+
+            <?php else: ?>
+            <!-- API Settings -->
+            <div class="form-card" style="max-width: 800px; margin: 0 auto;">
+                <h3 style="margin-bottom:1.5rem;">WhatsApp Integration Settings</h3>
+                <form method="POST">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="update_wa_config" value="1">
+                    
+                    <div class="grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Bot Status</label>
+                            <select name="bot_enabled" class="form-control">
+                                <option value="1" <?= ($configs['bot_enabled'] ?? '1') == '1' ? 'selected' : '' ?>>✅ Bot Enabled</option>
+                                <option value="0" <?= ($configs['bot_enabled'] ?? '1') == '0' ? 'selected' : '' ?>>❌ Bot Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API Version</label>
+                            <input type="text" name="wa_version" class="form-control" value="<?= htmlspecialchars($configs['wa_version'] ?? WA_VERSION) ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Permanent Access Token</label>
+                        <textarea name="wa_access_token" class="form-control" style="font-size:0.75rem;"><?= htmlspecialchars($configs['wa_access_token'] ?? WA_ACCESS_TOKEN) ?></textarea>
+                    </div>
+
+                    <div class="grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+                         <div class="form-group">
+                            <label class="form-label">Phone Number ID</label>
+                            <input type="text" name="wa_phone_number_id" class="form-control" value="<?= htmlspecialchars($configs['wa_phone_number_id'] ?? WA_PHONE_NUMBER_ID) ?>">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Webhook Verify Token</label>
+                            <input type="text" name="wa_webhook_token" class="form-control" value="<?= htmlspecialchars($configs['wa_webhook_token'] ?? WA_WEBHOOK_VERIFY_TOKEN) ?>">
+                        </div>
+                    </div>
+
+                    <hr style="opacity:0.1; margin:2rem 0;">
+                    <h4 style="margin-bottom:1.25rem;">Bot Core Messages</h4>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Welcome Message (Menu)</label>
+                        <textarea name="bot_welcome_msg" class="form-control" style="min-height:120px;"><?= htmlspecialchars($configs['bot_welcome_msg'] ?? "👋 Hello! Welcome to *" . SITE_NAME . "*\nHow can I help you today?") ?></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Fallback Message (Unknown query)</label>
+                        <textarea name="bot_fallback_msg" class="form-control"><?= htmlspecialchars($configs['bot_fallback_msg'] ?? "Sorry, I didn't understand that. Reply MENU to see options.") ?></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:1rem; margin-top:1rem;">Save All Settings</button>
+                </form>
+            </div>
+            <?php endif; ?>
+
         </div>
-
-        <div class="chat-main">
-          <?php if($activePhone): ?>
-          <div class="chat-header">
-            <div style="display:flex; align-items:center; gap:0.75rem;">
-              <button type="button" class="chat-back-btn btn-icon" onclick="location.href='wa_messages.php'"><i class="bi bi-arrow-left"></i></button>
-              <div style="font-weight:800;"><?= $activePhone ?></div>
-            </div>
-            <a href="orders.php?search=<?= $activePhone ?>" class="btn-primary btn-sm" style="font-size:0.7rem;">View Orders</a>
-          </div>
-          <div class="chat-messages" id="chatWindow">
-            <?php foreach($messages as $m): ?>
-            <div class="message-bubble <?= $m['direction'] ?>">
-              <?= nl2br(htmlspecialchars($m['message'])) ?>
-              <div class="message-time"><?= date('H:i', strtotime($m['created_at'])) ?></div>
-            </div>
-            <?php endforeach; ?>
-          </div>
-          <div class="chat-input-area">
-            <form method="POST" class="chat-input-box">
-              <?= csrfField() ?>
-              <input type="hidden" name="phone" value="<?= $activePhone ?>">
-              <textarea name="message" placeholder="Type a message..." required></textarea>
-              <button type="submit" name="send_reply" class="btn-primary"><i class="bi bi-send"></i></button>
-            </form>
-          </div>
-          <?php else: ?>
-          <div style="display:flex; align-items:center; justify-content:center; flex:1; flex-direction:column; color:var(--text-muted);">
-            <i class="bi bi-chat-dots" style="font-size:4rem; margin-bottom:1rem; opacity:0.3;"></i>
-            <p>Select a conversation to start chatting</p>
-          </div>
-          <?php endif; ?>
-        </div>
-      </div>
-
-      <?php else: ?>
-      <div class="data-table-card" style="padding: 2rem; max-width: 800px;">
-        <h3 style="margin-bottom: 1.5rem;">WhatsApp Configuration</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 2rem;">Setup your WhatsApp Business Cloud API credentials here. These will override the values in your config files if set.</p>
-        
-        <form method="POST">
-          <?= csrfField() ?>
-          <input type="hidden" name="update_wa_config" value="1">
-          
-          <div class="form-group mb-4">
-             <label class="form-label">Bot Status</label>
-             <select name="bot_enabled" class="filter-input">
-                <option value="1" <?= ($dbConfig['bot_enabled'] ?? '1') === '1' ? 'selected' : '' ?>>✅ Bot Enabled (Auto-Replies ON)</option>
-                <option value="0" <?= ($dbConfig['bot_enabled'] ?? '1') === '0' ? 'selected' : '' ?>>❌ Bot Disabled (Manual Only)</option>
-             </select>
-          </div>
-
-          <div class="form-group mb-4">
-            <label class="form-label">WhatsApp Access Token (Permanent)</label>
-            <textarea name="wa_access_token" class="filter-input" style="height: 100px;" placeholder="EAAS..."><?= htmlspecialchars($dbConfig['wa_access_token'] ?? WA_ACCESS_TOKEN) ?></textarea>
-            <small class="text-muted">Generate this from Meta for Developers portal.</small>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-            <div class="form-group mb-4">
-              <label class="form-label">Phone Number ID</label>
-              <input type="text" name="wa_phone_number_id" class="filter-input" value="<?= htmlspecialchars($dbConfig['wa_phone_number_id'] ?? WA_PHONE_NUMBER_ID) ?>">
-            </div>
-            <div class="form-group mb-4">
-              <label class="form-label">API Version</label>
-              <input type="text" name="wa_version" class="filter-input" value="<?= htmlspecialchars($dbConfig['wa_version'] ?? WA_VERSION) ?>">
-            </div>
-          </div>
-
-          <div class="form-group mb-4">
-            <label class="form-label">Webhook Verify Token</label>
-            <input type="text" name="wa_webhook_token" class="filter-input" value="<?= htmlspecialchars($dbConfig['wa_webhook_token'] ?? WA_WEBHOOK_VERIFY_TOKEN) ?>">
-            <small class="text-muted">Use this same token in Meta Webhook config.</small>
-          </div>
-
-          <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 1rem;">Save Configuration</button>
-        </form>
-
-        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
-          <h4 style="margin-bottom: 1rem;">Test Connection</h4>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Enter a phone number (with country code, e.g., 919876543210) to send a test message.</p>
-          <form method="POST" style="display: flex; gap: 1rem;">
-            <?= csrfField() ?>
-            <input type="text" name="test_phone" class="filter-input" placeholder="916238828993" style="flex: 1;">
-            <button type="submit" name="test_connection" class="btn-primary" style="white-space: nowrap;">Send Test Message</button>
-          </form>
-        </div>
-      </div>
-      <?php endif; ?>
-
     </div>
-  </div>
 </div>
+
+<!-- Macro Modal -->
+<div id="macroModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <h3 style="margin-bottom:1.5rem;">Add Quick Reply Macro</h3>
+        <form method="POST">
+            <?= csrfField() ?>
+            <input type="hidden" name="save_macro" value="1">
+            <div class="form-group">
+                <label class="form-label">Macro Title (Short)</label>
+                <input type="text" name="title" class="form-control" placeholder="Refund Info" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Full Content</label>
+                <textarea name="content" class="form-control" required placeholder="Hi! Your refund has been processed..."></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" class="btn-icon" onclick="toggleMacroModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Save Macro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-  const chatWindow = document.getElementById('chatWindow');
-  if(chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+    function toggleMacroModal() {
+        const m = document.getElementById('macroModal');
+        m.style.display = m.style.display === 'none' ? 'flex' : 'none';
+    }
+    function applyMacro(content) {
+        document.getElementById('messageInput').value = content;
+        document.getElementById('messageInput').focus();
+    }
+    
+    // Delivery Notification Preview Logic
+    async function previewNotif() {
+        const orderRef = document.querySelector('[name="order_identifier"]').value;
+        const template = document.querySelector('[name="notif_type"]').value;
+        if(!orderRef) return alert('Enter Order ID');
+        
+        const btn = event.target;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Fetching...';
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('action', 'preview');
+        formData.append('order_ref', orderRef);
+        formData.append('template', template);
+
+        try {
+            const resp = await fetch('ajax/wa_notifications.php', { method:'POST', body:formData });
+            const data = await resp.json();
+            if(data.success) {
+                document.getElementById('notifPreviewArea').style.display = 'block';
+                document.getElementById('notifPreviewText').value = data.preview;
+                document.getElementById('notifPhone').value = data.phone;
+                document.getElementById('notifOrderId').value = data.order_id;
+            } else {
+                alert(data.message);
+            }
+        } catch(e) { console.error(e); }
+        btn.innerHTML = 'Fetch Order & Preview';
+        btn.disabled = false;
+    }
+
+    async function sendNotif() {
+        const btn = event.target;
+        btn.innerHTML = 'Sending...';
+        btn.disabled = true;
+
+        const formData = new FormData();
+        formData.append('action', 'send');
+        formData.append('phone', document.getElementById('notifPhone').value);
+        formData.append('message', document.getElementById('notifPreviewText').value);
+        formData.append('order_id', document.getElementById('notifOrderId').value);
+
+        try {
+            const resp = await fetch('ajax/wa_notifications.php', { method:'POST', body:formData });
+            const data = await resp.json();
+            alert(data.message);
+            if(data.success) document.getElementById('notifPreviewArea').style.display = 'none';
+        } catch(e) { console.error(e); }
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Notification Now';
+        btn.disabled = false;
+    }
+
+    const win = document.getElementById('chatWindow');
+    if(win) win.scrollTop = win.scrollHeight;
 </script>
 </body>
 </html>
