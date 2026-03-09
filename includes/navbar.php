@@ -120,38 +120,39 @@ $categories = getCategories($pdo);
       <div style="display: grid; grid-template-columns: 1fr; gap: 0.25rem;">
         <?php foreach($categories as $cat): ?>
         <a href="<?= SITE_URL ?>/category/<?= $cat['slug'] ?>" class="menu-item">
-          <?php if (strlen($cat['icon']) > 5 || strpos($cat['icon'], 'bi-') !== false): ?>
-            <i class="<?= $cat['icon'] ?>"></i>
-          <?php else: ?>
-            <span style="width: 20px; text-align: center;"><?= $cat['icon'] ?></span>
-          <?php endif; ?>
+          <i>
+            <?php if (strlen($cat['icon']) > 5 || strpos($cat['icon'], 'bi-') !== false): ?>
+              <span class="<?= $cat['icon'] ?>"></span>
+            <?php else: ?>
+              <span style="font-style: normal; font-size: 1rem;"><?= $cat['icon'] ?></span>
+            <?php endif; ?>
+          </i>
           <?= htmlspecialchars($cat['name']) ?>
         </a>
         <?php endforeach; ?>
       </div>
     </div>
+  </div>
 
-    <div class="menu-section" style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-      <div class="section-label">User Account</div>
-      <?php if($currentUser): ?>
-      <a href="<?= SITE_URL ?>/profile" class="menu-item">
-        <i class="bi bi-person-circle"></i> My Profile Settings
+  <div class="sidebar-footer">
+    <div class="section-label">User Account</div>
+    <?php if($currentUser): ?>
+      <div style="display: grid; grid-template-columns: 1fr; gap: 0.25rem;">
+        <a href="<?= SITE_URL ?>/profile" class="menu-item">
+          <i class="bi bi-person-circle"></i> My Profile
+        </a>
+        <a href="<?= SITE_URL ?>/orders" class="menu-item">
+          <i class="bi bi-bag-check"></i> Orders
+        </a>
+        <a href="<?= SITE_URL ?>/logout" class="menu-item" style="color:var(--danger); border-color: rgba(255,101,132,0.1);">
+          <i class="bi bi-box-arrow-right" style="color:var(--danger);"></i> Logout
+        </a>
+      </div>
+    <?php else: ?>
+      <a href="<?= SITE_URL ?>/login" class="btn-login">
+        <i class="bi bi-box-arrow-in-right"></i> Login / Register
       </a>
-      <a href="<?= SITE_URL ?>/orders" class="menu-item">
-        <i class="bi bi-bag-check"></i> Order History
-      </a>
-      <a href="<?= SITE_URL ?>/track_order" class="menu-item">
-        <i class="bi bi-truck"></i> Track Your Order
-      </a>
-      <a href="<?= SITE_URL ?>/logout" class="menu-item" style="color:var(--danger) !important; margin-top: 1rem; background: rgba(255, 101, 132, 0.1);">
-        <i class="bi bi-box-arrow-right"></i> Logout
-      </a>
-      <?php else: ?>
-      <a href="<?= SITE_URL ?>/login" class="menu-item active" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff !important;">
-        <i class="bi bi-box-arrow-in-right" style="color: #fff !important;"></i> Login / Register
-      </a>
-      <?php endif; ?>
-    </div>
+    <?php endif; ?>
   </div>
 </div>
 

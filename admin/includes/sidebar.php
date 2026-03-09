@@ -47,14 +47,14 @@
     <a href="banners.php" class="menu-item <?= $currentPage==='banners'?'active':'' ?>">
       <div class="menu-icon"><i class="bi bi-images"></i></div> Banners & Ads
     </a>
-    <a href="wa_messages.php" class="menu-item <?= $currentPage==='wa_messages'?'active':'' ?>">
+    <a href="wa_messages.php" class="menu-item <?= ($currentPage==='wa_messages' && !isset($_GET['tab']))?'active':'' ?>">
       <div class="menu-icon"><i class="bi bi-robot"></i></div> Bot Settings
     </a>
     <a href="wa_messages.php?tab=chat" class="menu-item <?= ($currentPage==='wa_messages' && ($_GET['tab']??'')==='chat')?'active':'' ?>">
       <div class="menu-icon"><i class="bi bi-chat-dots"></i></div> Customer Chats
     </a>
     <a href="wa_messages.php?tab=broadcast" class="menu-item <?= ($currentPage==='wa_messages' && ($_GET['tab']??'')==='broadcast')?'active':'' ?>">
-      <div class="menu-icons"><i class="bi bi-megaphone"></i></div> Broadcast
+      <div class="menu-icon"><i class="bi bi-megaphone"></i></div> Broadcast
     </a>
     <a href="wa_logs.php" class="menu-item <?= $currentPage==='wa_logs'?'active':'' ?>">
       <div class="menu-icon"><i class="bi bi-journal-text"></i></div> WhatsApp Logs
