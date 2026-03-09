@@ -3185,3 +3185,145 @@ select.form-control option {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 }
+
+/* --- PREMIUM MOBILE HOME PAGE ENHANCEMENTS --- */
+@media (max-width: 768px) {
+  .hero-slider {
+    height: 320px;
+    border-radius: 0;
+    margin: 0 -1rem 1.5rem;
+    width: calc(100% + 2rem);
+  }
+
+  .slide-content {
+    padding: 1.5rem;
+  }
+
+  .slide-title {
+    font-size: 1.75rem;
+  }
+
+  /* Circular Category Scroller */
+  .premium-cat-scroller {
+    display: flex;
+    overflow-x: auto;
+    padding: 1.5rem 0;
+    gap: 1.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin: 0 -1rem !important;
+    padding-left: 1.25rem !important;
+  }
+
+  .premium-cat-scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .premium-cat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    text-decoration: none;
+    width: 70px;
+    transition: 0.3s;
+  }
+
+  .cat-icon-circle {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--glass);
+    border: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    color: var(--primary);
+    transition: 0.3s;
+    box-shadow: 0 8px 25px rgba(108, 99, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cat-icon-circle::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+    opacity: 0;
+    transition: 0.3s;
+  }
+
+  .premium-cat-item:active .cat-icon-circle {
+    transform: scale(0.9);
+    border-color: var(--accent);
+  }
+
+  .premium-cat-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    transition: 0.3s;
+  }
+
+  /* Compact Product Grid */
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .mobile-stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  .glass-card.mobile-stats-item {
+    padding: 1rem !important;
+    text-align: left !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    min-height: 80px;
+  }
+
+  .mobile-stats-item i {
+    font-size: 1.5rem !important;
+  }
+}
+
+/* Floating WhatsApp Button */
+.fab-whatsapp {
+  position: fixed;
+  bottom: 85px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: #25D366;
+  color: #fff !important;
+  border-radius: 50%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);
+  z-index: 4999;
+  text-decoration: none;
+  transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab-whatsapp:hover {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.fab-whatsapp i {
+  line-height: 1;
+}

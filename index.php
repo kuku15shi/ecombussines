@@ -104,47 +104,52 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
       <div class="slider-dots" id="sliderDots"></div>
     </div>
 
-    <!-- Categories Scroller (Mobile Only) -->
-    <div class="d-md-none scroller-wrapper">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; padding:0 0.25rem;">
-        <h3 style="font-size:1.15rem; font-weight:800; margin:0; letter-spacing:-0.5px;">Categories</h3>
-        <a href="products" style="font-size:0.85rem; color:var(--primary); text-decoration:none; font-weight:700;">View All</a>
+    <!-- Categories Scroller (Premium Circular Layout) -->
+    <div class="d-md-none" style="margin: 1rem 0 2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem; padding:0 0.25rem;">
+        <h3 style="font-size:1.25rem; font-weight:900; margin:0; letter-spacing:-0.5px;">Collections</h3>
+        <a href="products" style="font-size:0.85rem; color:var(--primary); text-decoration:none; font-weight:800;">View All</a>
       </div>
-      <div class="horizontal-scroll">
-        <a href="products" class="category-chip active">
-          <i class="bi bi-grid-fill"></i> All
+      <div class="premium-cat-scroller">
+        <a href="products" class="premium-cat-item">
+          <div class="cat-icon-circle" style="background: linear-gradient(135deg, var(--primary), var(--accent)); color:#fff; border:none;">
+            <i class="bi bi-grid-fill"></i>
+          </div>
+          <div class="premium-cat-label">All</div>
         </a>
         <?php foreach($categories as $cat): ?>
-        <a href="category/<?= $cat['slug'] ?>" class="category-chip">
-          <?php if (strlen($cat['icon']) > 5 || strpos($cat['icon'], 'bi-') !== false): ?>
-            <i class="<?= $cat['icon'] ?>"></i>
-          <?php else: ?>
-            <span class="emoji-icon"><?= $cat['icon'] ?></span>
-          <?php endif; ?>
-          <span><?= htmlspecialchars($cat['name']) ?></span>
+        <a href="category/<?= $cat['slug'] ?>" class="premium-cat-item">
+          <div class="cat-icon-circle">
+            <?php if (strlen($cat['icon']) > 5 || strpos($cat['icon'], 'bi-') !== false): ?>
+              <i class="<?= $cat['icon'] ?>"></i>
+            <?php else: ?>
+              <span style="font-style: normal;"><?= $cat['icon'] ?></span>
+            <?php endif; ?>
+          </div>
+          <div class="premium-cat-label"><?= htmlspecialchars($cat['name']) ?></div>
         </a>
         <?php endforeach; ?>
       </div>
     </div>
 
     <!-- STATS BAR -->
-    <div class="grid-4" style="margin:1.5rem 0; gap:0.75rem;">
+    <div class="mobile-stats-row" style="margin:2rem 0;">
       <?php
       $stats = [
-        ['icon'=>'bi-truck','label'=>'Free Shipping','sub'=>'Orders over ₹999'],
-        ['icon'=>'bi-shield-check','label'=>'Secure Payment','sub'=>'100% safe & protected'],
-        ['icon'=>'bi-arrow-counterclockwise','label'=>'Easy Returns','sub'=>'30-day policy'],
-        ['icon'=>'bi-headset','label'=>'24/7 Support','sub'=>'Help available'],
+        ['icon'=>'bi-truck','label'=>'Free Shipping','sub'=>'Over ₹999'],
+        ['icon'=>'bi-shield-lock','label'=>'Secure Pay','sub'=>'Verified'],
+        ['icon'=>'bi-arrow-repeat','label'=>'Return Policy','sub'=>'30 Days'],
+        ['icon'=>'bi-lightning','label'=>'Fast Delivery','sub'=>'Express'],
       ];
       foreach($stats as $s):
       ?>
-      <div class="glass-card mobile-stats-item" style="padding:1rem; display:flex; flex-direction:column; align-items:center; text-align:center; gap:0.5rem;">
-        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,rgba(108,99,255,0.15),rgba(255,101,132,0.15));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="<?= $s['icon'] ?>" style="font-size:1.1rem;color:var(--primary);"></i>
+      <div class="glass-card mobile-stats-item" style="gap:1rem;">
+        <div style="width:44px; height:44px; border-radius:12px; background:rgba(108,99,255,0.1); display:flex; align-items:center; justify-content:center;">
+          <i class="<?= $s['icon'] ?>" style="font-size:1.3rem; color:var(--primary);"></i>
         </div>
         <div>
-          <div style="font-weight:700;font-size:0.8rem;color:var(--text-primary);"><?= $s['label'] ?></div>
-          <div style="font-size:0.65rem;color:var(--text-muted);"><?= $s['sub'] ?></div>
+          <div style="font-weight:800; font-size:0.85rem; color:var(--text-primary); letter-spacing:-0.2px;"><?= $s['label'] ?></div>
+          <div style="font-size:0.7rem; color:var(--text-muted);"><?= $s['sub'] ?></div>
         </div>
       </div>
       <?php endforeach; ?>
@@ -340,6 +345,10 @@ function updateCountdown() {
 updateCountdown();
 setInterval(updateCountdown, 1000);
 </script>
+<a href="https://wa.me/916238828993" class="fab-whatsapp d-md-none" target="_blank">
+  <i class="bi bi-whatsapp"></i>
+</a>
+
 <?php include 'includes/bottom_nav.php'; ?>
 </body>
 </html>
