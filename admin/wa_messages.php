@@ -148,8 +148,9 @@ try {
         .wa-layout { 
             display: grid; 
             grid-template-columns: 320px 1fr; 
-            height: calc(100vh - 260px); 
-            min-height: 450px;
+            height: 70vh;
+            min-height: 500px;
+            max-height: 800px;
             background: var(--glass); 
             border: 1px solid var(--glass-border); 
             border-radius: var(--radius); 
@@ -158,44 +159,64 @@ try {
         }
         .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .wa-chat-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+        .wa-chat-list { flex: 1; overflow-y: auto; padding: 0.5rem; min-height: 0; }
         .wa-chat-item { padding: 0.875rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.25rem; cursor: pointer; transition: 0.2s; position: relative; }
         .wa-chat-item:hover { background: rgba(255,255,255,0.05); }
         .wa-chat-item.active { background: rgba(108,99,255,0.1); border: 1px solid var(--glass-border); }
         .unread-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: absolute; right: 1rem; top: 1.25rem; }
         
+        /* ABSOLUTE POSITIONING APPROACH - BULLETPROOF */
         .chat-view { 
-            display: flex; 
-            flex-direction: column; 
+            position: relative;
             height: 100%;
             overflow: hidden;
             background: rgba(0,0,0,0.02); 
         }
-        .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); flex-shrink: 0; }
+        .chat-header { 
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 65px;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: var(--card-bg); 
+            z-index: 10;
+        }
+        .chat-footer { 
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 1rem 1.25rem; 
+            border-top: 1px solid var(--border); 
+            background: var(--card-bg); 
+            z-index: 10;
+        }
         .chat-body { 
-            flex: 1; 
+            position: absolute;
+            top: 65px;
+            bottom: 135px; /* approx footer height */
+            left: 0; right: 0;
             overflow-y: auto; 
-            padding: 1.5rem; 
+            padding: 1rem 1.5rem; 
             display: flex; 
             flex-direction: column; 
             gap: 1rem;
-            min-height: 0; /* CRITICAL: allows flex children to shrink */
         }
         .msg { max-width: 75%; padding: 0.75rem 1rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; position: relative; }
         .msg.incoming { align-self: flex-start; background: var(--glass); border-bottom-left-radius: 2px; }
         .msg.outgoing { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
         .msg-time { font-size: 0.65rem; opacity: 0.6; margin-top: 4px; text-align: right; }
         
-        .chat-footer { padding: 1.25rem; border-top: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; }
         .reply-box { display: flex; gap: 0.75rem; align-items: flex-end; }
-        .reply-box textarea { flex: 1; min-height: 48px; max-height: 150px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 0.75rem; color: var(--text-primary); outline: none; resize: none; }
+        .reply-box textarea { flex: 1; min-height: 44px; max-height: 100px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; color: var(--text-primary); outline: none; resize: none; font-size: 0.9rem; }
         
-        .quick-replies { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem; }
-        .qr-btn { padding: 0.4rem 0.8rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; color: var(--text-secondary); }
+        .quick-replies { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem; }
+        .qr-btn { padding: 0.35rem 0.75rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 0.72rem; cursor: pointer; white-space: nowrap; color: var(--text-secondary); }
         .qr-btn:hover { background: var(--primary); color: #fff; }
 
-        .tabs-nav { display: flex; gap: 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
-        .tab-link { padding: 0.75rem 0.25rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tabs-nav { display: flex; gap: 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .tab-link { padding: 0.75rem 0.25rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
         .tab-link:hover { color: var(--primary); }
         .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
     </style>
