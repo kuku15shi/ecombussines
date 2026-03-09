@@ -138,7 +138,30 @@ class WhatsAppBot {
 
     private function mainMenu() {
         $this->saveSession('start');
-        return $this->welcomeMsg;
+        
+        // Dynamic Categories for welcome message
+        $cats = $this->pdo->query("SELECT id, name FROM categories WHERE is_active = 1 LIMIT 5")->fetchAll();
+        $catList = "";
+        $map = [];
+        if($cats) {
+            $catList = "\n\n🛍️ *Shop by Category*:\n";
+            foreach($cats as $i => $c) {
+                $idx = $i + 5; // Start from 5 as 1-4 are taken
+                $catList .= "$idx️⃣ " . $c['name'] . "\n";
+                $map[$idx] = $c['id'];
+            }
+            $data = $this->session['data'];
+            $data['map'] = $map;
+            $this->saveSession('start', $data);
+        }
+
+        return $this->welcomeMsg . "\n\n" .
+               "1️⃣ Track Order\n" .
+               "2️⃣ Cancel Order\n" .
+               "3️⃣ Recent Orders\n" .
+               "4️⃣ Talk to Support\n" .
+               $catList . "\n" .
+               "Or type the product name to search.";
     }
 
     private function handleLangSelection() {
@@ -173,13 +196,26 @@ class WhatsAppBot {
 
     private function handleMainMenu($forcedText = null) {
         $input = $forcedText ?: $this->text;
+        $map = $this->session['data']['map'] ?? [];
 
-        if (in_array($input, ['1', '2', '3'])) {
+        if (in_array($input, ['1', '2'])) {
             $this->saveSession('track_order_id');
             return "📦 Please enter your Order ID\nExample: ORD12345";
+        } elseif ($input == '3') {
+            return $this->myOrders();
         } elseif ($input == '4') {
             return "👨‍💻 *Customer Support*\n\nPlease describe your issue.\nOur team will reply shortly.\n\nType MENU to return.";
+        } elseif (isset($map[$input])) {
+            // Redirect to category flow
+            $this->saveSession('category_list', $this->session['data']);
+            return $this->handleCategorySelection($input);
         }
+
+        // Search logic if not a number
+        if (!is_numeric($input) && strlen($input) > 2) {
+            return $this->handleSearch();
+        }
+
         return $this->mainMenu();
     }
 
@@ -198,10 +234,11 @@ class WhatsAppBot {
     }
 
 
-    private function handleCategorySelection() {
+    private function handleCategorySelection($forcedChoice = null) {
+        $choice = $forcedChoice ?: $this->text;
         $map = $this->session['data']['map'] ?? [];
-        if (isset($map[$this->text])) {
-            $catId = $map[$this->text];
+        if (isset($map[$choice])) {
+            $catId = $map[$choice];
             $stmt = $this->pdo->prepare("SELECT id, name, price FROM products WHERE category_id = ? AND is_active = 1 LIMIT 10");
             $stmt->execute([$catId]);
             $prods = $stmt->fetchAll();

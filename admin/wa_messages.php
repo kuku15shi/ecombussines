@@ -145,7 +145,17 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="css/admin.css" rel="stylesheet">
     <style>
-        .wa-layout { display: grid; grid-template-columns: 320px 1fr; height: calc(100vh - 180px); background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius); overflow: hidden; }
+        .wa-layout { 
+            display: grid; 
+            grid-template-columns: 320px 1fr; 
+            height: calc(100vh - 260px); 
+            min-height: 450px;
+            background: var(--glass); 
+            border: 1px solid var(--glass-border); 
+            border-radius: var(--radius); 
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
         .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
         .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); }
         .wa-chat-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
