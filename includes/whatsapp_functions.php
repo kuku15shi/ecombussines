@@ -59,6 +59,17 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'text', $templateName = 
     } elseif ($type === 'interactive') {
         // messageBody is expected to be the interactive array
         $data["interactive"] = $messageBody;
+    } elseif ($type === 'image') {
+        // messageBody = ['link' => url, 'caption' => text]
+        $data["image"] = [
+            "link" => $messageBody['link'],
+            "caption" => $messageBody['caption'] ?? ''
+        ];
+    } elseif ($type === 'video') {
+        $data["video"] = [
+            "link" => $messageBody['link'],
+            "caption" => $messageBody['caption'] ?? ''
+        ];
     } else {
         $data["text"] = ["body" => $messageBody];
     }

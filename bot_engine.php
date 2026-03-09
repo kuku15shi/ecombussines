@@ -102,6 +102,12 @@ class WhatsAppBot {
             return $msg . "\n\nOr type any product name to search.";
         }
 
+        if (strpos($id, 'buy_') === 0) {
+            $pId = substr($id, 4);
+            $this->saveSession('order_name', ['pId' => $pId]);
+            return "👤 *Step 1 of 3*\n\nPlease enter your *Full Name* for delivery:";
+        }
+
         if ($id === 'support') return $this->handleMainMenu('4');
         
         if (strpos($id, 'track_') === 0) {
@@ -275,21 +281,58 @@ class WhatsAppBot {
         $map = $this->session['data']['map'] ?? [];
         if (isset($map[$choice])) {
             $catId = $map[$choice];
-            $stmt = $this->pdo->prepare("SELECT id, name, price FROM products WHERE category_id = ? AND is_active = 1 LIMIT 10");
+            $stmt = $this->pdo->prepare("SELECT id, name, price, images, short_description FROM products WHERE category_id = ? AND is_active = 1 LIMIT 8");
             $stmt->execute([$catId]);
             $prods = $stmt->fetchAll();
             
-            if (!$prods) return "No products in this category. Reply MENU for main menu.";
+            if (!$prods) return "No products in this category yet.\n\nType MENU to go back.";
 
-            $msg = "🛒 *Products List*\n";
             $pMap = [];
+            $messages = []; // Multiple messages to send
+            
+            // First, send a text header
+            $catName = '';
+            $catStmt = $this->pdo->prepare("SELECT name FROM categories WHERE id = ?");
+            $catStmt->execute([$catId]);
+            $catName = $catStmt->fetchColumn() ?: 'Products';
+            
+            $messages[] = [
+                '_type' => 'text',
+                '_payload' => "�️ *" . $catName . "*\n\nHere are our products. Tap a number to order:\n"
+            ];
+
             foreach ($prods as $i => $p) {
                 $idx = $i + 1;
-                $msg .= "\n" . ($idx) . "️⃣ " . $p['name'] . " – " . formatPrice($p['price']);
                 $pMap[$idx] = $p['id'];
+                $imgList = json_decode($p['images'], true);
+                $imgFile = is_array($imgList) ? ($imgList[0] ?? '') : $p['images'];
+                $imgUrl = !empty($imgFile) ? rtrim(UPLOAD_URL, '/') . '/' . ltrim($imgFile, '/') : '';
+                
+                $caption = "*" . $idx . ". " . $p['name'] . "*\n" .
+                           "💰 " . formatPrice($p['price']) . "\n" .
+                           ($p['short_description'] ? substr($p['short_description'], 0, 100) . "..." : '') . "\n\n" .
+                           "Reply *" . $idx . "* to see details & buy";
+                
+                if ($imgUrl) {
+                    $messages[] = [
+                        '_type' => 'image',
+                        '_payload' => ['link' => $imgUrl, 'caption' => $caption]
+                    ];
+                } else {
+                    $messages[] = [
+                        '_type' => 'text',
+                        '_payload' => $caption
+                    ];
+                }
             }
+
             $this->saveSession('product_list', ['pMap' => $pMap]);
-            return $msg . "\n\nReply with product number to see details.";
+            
+            // Return multi-message payload
+            return [
+                '_type' => 'multi',
+                '_messages' => $messages
+            ];
         }
         return "Invalid selection. Please reply with a number from the list.";
     }
@@ -303,15 +346,39 @@ class WhatsAppBot {
             $p = $stmt->fetch();
 
             if ($p) {
-                $msg = "✨ *" . $p['name'] . "*\n\n" .
-                       "💰 Price: " . formatPrice($p['price']) . "\n" .
-                       "⚖️ Weight: " . ($p['weight'] ? $p['weight'] . 'g' : 'N/A') . "\n" .
-                       "📦 Stock: " . ($p['stock'] > 0 ? 'Available' : 'Out of Stock') . "\n\n" .
-                       "--- Description ---\n" . ($p['short_description'] ?: 'No description available') . "\n\n" .
-                       "1️⃣ Buy Now\n" .
-                       "2️⃣ Back to Categories";
+                $imgList = json_decode($p['images'], true);
+                $imgFile = is_array($imgList) ? ($imgList[0] ?? '') : $p['images'];
+                $imgUrl = !empty($imgFile) ? rtrim(UPLOAD_URL, '/') . '/' . ltrim($imgFile, '/') : '';
+                
+                $caption = "✨ *" . $p['name'] . "*\n\n" .
+                           "💰 Price: " . formatPrice($p['price']) . "\n" .
+                           "📦 Stock: " . ($p['stock'] > 0 ? '✅ Available' : '❌ Out of Stock') . "\n\n" .
+                           ($p['short_description'] ? $p['short_description'] . "\n\n" : '') .
+                           "Reply *1* to Buy Now | *2* to go back";
+
                 $this->saveSession('product_details', ['pId' => $pId]);
-                return $msg;
+                
+                if ($imgUrl) {
+                    // Send product image with buy button as interactive
+                    return [
+                        '_type' => 'multi',
+                        '_messages' => [
+                            ['_type' => 'image', '_payload' => ['link' => $imgUrl, 'caption' => $caption]],
+                            ['_type' => 'interactive', '_payload' => [
+                                'type' => 'button',
+                                'body' => ['text' => 'What would you like to do?'],
+                                'action' => [
+                                    'buttons' => [
+                                        ['type' => 'reply', 'reply' => ['id' => 'buy_' . $pId, 'title' => '🛒 Buy Now']],
+                                        ['type' => 'reply', 'reply' => ['id' => 'menu_browse', 'title' => '↩️ Browse More']],
+                                    ]
+                                ]
+                            ]]
+                        ]
+                    ];
+                } else {
+                    return $caption;
+                }
             }
         }
         return "Invalid selection.";

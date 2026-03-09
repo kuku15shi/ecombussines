@@ -64,20 +64,56 @@ if ($buttonId) {
 
 
 if ($reply) {
-    if (is_array($reply) && isset($reply['_type']) && $reply['_type'] === 'interactive') {
-        // Send Interactive Button Message
-        sendWhatsAppMessage($from, $reply['_payload'], 'interactive');
-        $logMsg = json_encode($reply['_payload']);
+    // Helper to send one message based on its type
+    $sendOneMessage = function($msg) use ($from, $pdo) {
+        if (is_string($msg)) {
+            sendWhatsAppMessage($from, $msg, 'text');
+            $logMsg = $msg;
+        } elseif (is_array($msg)) {
+            $type = $msg['_type'] ?? 'text';
+            $payload = $msg['_payload'] ?? $msg;
+            if ($type === 'interactive') {
+                sendWhatsAppMessage($from, $payload, 'interactive');
+                $logMsg = '[Interactive]';
+            } elseif ($type === 'image') {
+                sendWhatsAppMessage($from, $payload, 'image');
+                $logMsg = '[Image] ' . ($payload['caption'] ?? '');
+            } else {
+                sendWhatsAppMessage($from, $payload, 'text');
+                $logMsg = is_string($payload) ? $payload : json_encode($payload);
+            }
+        }
+        return $logMsg ?? '';
+    };
+
+    $logMsg = '';
+    if (is_array($reply) && isset($reply['_type'])) {
+        if ($reply['_type'] === 'multi') {
+            // Send multiple messages sequentially
+            foreach ($reply['_messages'] as $msg) {
+                $logMsg = $sendOneMessage($msg);
+                usleep(300000); // 300ms delay between messages
+            }
+        } elseif ($reply['_type'] === 'interactive') {
+            sendWhatsAppMessage($from, $reply['_payload'], 'interactive');
+            $logMsg = '[Interactive Menu]';
+        } elseif ($reply['_type'] === 'image') {
+            sendWhatsAppMessage($from, $reply['_payload'], 'image');
+            $logMsg = '[Image]';
+        } else {
+            sendWhatsAppMessage($from, $reply, 'text');
+            $logMsg = json_encode($reply);
+        }
     } else {
-        // Send plain text
+        // Plain text string
         sendWhatsAppMessage($from, $reply, 'text');
         $logMsg = $reply;
     }
-    
-    // Store Outgoing Message
+
+    // Store last outgoing message for chat log
     try {
         $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-            ->execute([$from, is_string($reply) ? $reply : '[Interactive Message]']);
+            ->execute([$from, is_string($logMsg) ? substr($logMsg, 0, 500) : '[Message]']);
     } catch (Exception $e) {
         error_log("Webhook Reply DB Error: " . $e->getMessage());
     }
