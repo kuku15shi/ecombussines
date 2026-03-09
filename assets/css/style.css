@@ -3327,3 +3327,22 @@ select.form-control option {
 .fab-whatsapp i {
   line-height: 1;
 }
+
+/* --- UTILITY CLASSES --- */
+.d-none {
+  display: none !important;
+}
+
+.d-block {
+  display: block !important;
+}
+
+@media (min-width: 768px) {
+  .d-md-none {
+    display: none !important;
+  }
+
+  .d-md-block {
+    display: block !important;
+  }
+}

@@ -155,8 +155,8 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
       <?php endforeach; ?>
     </div>
 
-    <!-- CATEGORIES -->
-    <section style="margin:3rem 0;">
+    <!-- CATEGORIES (Desktop Only) -->
+    <section class="d-none d-md-block" style="margin:3rem 0;">
       <div class="section-header">
         <div class="section-badge">Browse</div>
         <h2 class="section-title">Shop by Category</h2>
