@@ -425,7 +425,7 @@ class WhatsAppBot {
                 $stmt = $this->pdo->prepare("INSERT INTO orders (order_number, user_id, name, email, phone, address, city, state, pincode, subtotal, discount, shipping, gst, cod_fee, total, coupon_code, payment_method, payment_status, order_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $orderNum,
-                    0, // guest order from WhatsApp
+                    null, // NULL user_id for WhatsApp guest orders
                     $data['name'],
                     '', // no email from WhatsApp
                     $this->from,
