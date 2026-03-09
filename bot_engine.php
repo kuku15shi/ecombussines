@@ -276,112 +276,120 @@ class WhatsAppBot {
     }
 
 
+    // Helper: get absolute public image URL from stored value
+    private function getProductImageUrl($images) {
+        $imgList = json_decode($images, true);
+        $imgFile = '';
+        if (is_array($imgList) && !empty($imgList[0])) {
+            $imgFile = $imgList[0];
+        } elseif (is_string($images) && !empty($images) && $images !== 'null') {
+            $imgFile = $images;
+        }
+        if (empty($imgFile)) return '';
+        // Strip any leading slashes or 'uploads/' prefix to avoid doubling
+        $imgFile = ltrim($imgFile, '/');
+        if (strpos($imgFile, 'uploads/') === 0) {
+            $imgFile = substr($imgFile, 8); // strip 'uploads/'
+        }
+        return 'https://ecombuss.gt.tc/uploads/' . $imgFile;
+    }
+
     private function handleCategorySelection($forcedChoice = null) {
         $choice = $forcedChoice ?: $this->text;
         $map = $this->session['data']['map'] ?? [];
-        if (isset($map[$choice])) {
-            $catId = $map[$choice];
-            $stmt = $this->pdo->prepare("SELECT id, name, price, images, short_description FROM products WHERE category_id = ? AND is_active = 1 LIMIT 8");
-            $stmt->execute([$catId]);
-            $prods = $stmt->fetchAll();
-            
-            if (!$prods) return "No products in this category yet.\n\nType MENU to go back.";
-
-            $pMap = [];
-            $messages = []; // Multiple messages to send
-            
-            // First, send a text header
-            $catName = '';
-            $catStmt = $this->pdo->prepare("SELECT name FROM categories WHERE id = ?");
-            $catStmt->execute([$catId]);
-            $catName = $catStmt->fetchColumn() ?: 'Products';
-            
-            $messages[] = [
-                '_type' => 'text',
-                '_payload' => "�️ *" . $catName . "*\n\nHere are our products. Tap a number to order:\n"
-            ];
-
-            foreach ($prods as $i => $p) {
-                $idx = $i + 1;
-                $pMap[$idx] = $p['id'];
-                $imgList = json_decode($p['images'], true);
-                $imgFile = is_array($imgList) ? ($imgList[0] ?? '') : $p['images'];
-                $imgUrl = !empty($imgFile) ? rtrim(UPLOAD_URL, '/') . '/' . ltrim($imgFile, '/') : '';
-                
-                $caption = "*" . $idx . ". " . $p['name'] . "*\n" .
-                           "💰 " . formatPrice($p['price']) . "\n" .
-                           ($p['short_description'] ? substr($p['short_description'], 0, 100) . "..." : '') . "\n\n" .
-                           "Reply *" . $idx . "* to see details & buy";
-                
-                if ($imgUrl) {
-                    $messages[] = [
-                        '_type' => 'image',
-                        '_payload' => ['link' => $imgUrl, 'caption' => $caption]
-                    ];
-                } else {
-                    $messages[] = [
-                        '_type' => 'text',
-                        '_payload' => $caption
-                    ];
-                }
-            }
-
-            $this->saveSession('product_list', ['pMap' => $pMap]);
-            
-            // Return multi-message payload
-            return [
-                '_type' => 'multi',
-                '_messages' => $messages
-            ];
+        if (!isset($map[$choice])) {
+            return "Invalid selection.\n\nType MENU to see options.";
         }
-        return "Invalid selection. Please reply with a number from the list.";
+
+        $catId = $map[$choice];
+        $stmt = $this->pdo->prepare("SELECT id, name, price, images, short_description FROM products WHERE category_id = ? AND is_active = 1 LIMIT 8");
+        $stmt->execute([$catId]);
+        $prods = $stmt->fetchAll();
+        
+        if (!$prods) return "No products in this category yet.\n\nType MENU to go back.";
+
+        // Get category name
+        $catStmt = $this->pdo->prepare("SELECT name FROM categories WHERE id = ?");
+        $catStmt->execute([$catId]);
+        $catName = $catStmt->fetchColumn() ?: 'Products';
+
+        $pMap = [];
+        $messages = [];
+
+        // 1. Send numbered text list (always reliable, user can reply with number)
+        $listText = "🛍️ *" . $catName . "*\n\n";
+        foreach ($prods as $i => $p) {
+            $idx = $i + 1;
+            $pMap[$idx] = $p['id'];
+            $listText .= "*" . $idx . ".* " . $p['name'] . " — " . formatPrice($p['price']) . "\n";
+        }
+        $listText .= "\n👆 Reply with a *number* to see product details & buy.";
+        $messages[] = ['_type' => 'text', '_payload' => $listText];
+
+        // 2. Send product images (best-effort)
+        foreach ($prods as $i => $p) {
+            $idx = $i + 1;
+            $imgUrl = $this->getProductImageUrl($p['images']);
+            if ($imgUrl) {
+                $caption = "*" . $idx . ".* " . $p['name'] . "\n" .
+                           "💰 " . formatPrice($p['price']);
+                $messages[] = ['_type' => 'image', '_payload' => ['link' => $imgUrl, 'caption' => $caption]];
+            }
+        }
+
+        $this->saveSession('product_list', ['pMap' => $pMap]);
+        return ['_type' => 'multi', '_messages' => $messages];
     }
 
     private function handleProductSelection() {
         $pMap = $this->session['data']['pMap'] ?? [];
-        if (isset($pMap[$this->text])) {
-            $pId = $pMap[$this->text];
-            $stmt = $this->pdo->prepare("SELECT * FROM products WHERE id = ?");
-            $stmt->execute([$pId]);
-            $p = $stmt->fetch();
-
-            if ($p) {
-                $imgList = json_decode($p['images'], true);
-                $imgFile = is_array($imgList) ? ($imgList[0] ?? '') : $p['images'];
-                $imgUrl = !empty($imgFile) ? rtrim(UPLOAD_URL, '/') . '/' . ltrim($imgFile, '/') : '';
-                
-                $caption = "✨ *" . $p['name'] . "*\n\n" .
-                           "💰 Price: " . formatPrice($p['price']) . "\n" .
-                           "📦 Stock: " . ($p['stock'] > 0 ? '✅ Available' : '❌ Out of Stock') . "\n\n" .
-                           ($p['short_description'] ? $p['short_description'] . "\n\n" : '') .
-                           "Reply *1* to Buy Now | *2* to go back";
-
-                $this->saveSession('product_details', ['pId' => $pId]);
-                
-                if ($imgUrl) {
-                    // Send product image with buy button as interactive
-                    return [
-                        '_type' => 'multi',
-                        '_messages' => [
-                            ['_type' => 'image', '_payload' => ['link' => $imgUrl, 'caption' => $caption]],
-                            ['_type' => 'interactive', '_payload' => [
-                                'type' => 'button',
-                                'body' => ['text' => 'What would you like to do?'],
-                                'action' => [
-                                    'buttons' => [
-                                        ['type' => 'reply', 'reply' => ['id' => 'buy_' . $pId, 'title' => '🛒 Buy Now']],
-                                        ['type' => 'reply', 'reply' => ['id' => 'menu_browse', 'title' => '↩️ Browse More']],
-                                    ]
-                                ]
-                            ]]
-                        ]
-                    ];
-                } else {
-                    return $caption;
-                }
-            }
+        if (!isset($pMap[$this->text])) {
+            return "Invalid selection. Please reply with a number from the product list, or type MENU.";
         }
-        return "Invalid selection.";
+
+        $pId = $pMap[$this->text];
+        $stmt = $this->pdo->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt->execute([$pId]);
+        $p = $stmt->fetch();
+
+        if (!$p) return "Product not found. Type MENU to go back.";
+
+        $this->saveSession('product_details', ['pId' => $pId]);
+
+        $stockBadge = $p['stock'] > 0 ? '✅ In Stock' : '❌ Out of Stock';
+        $detailText = "✨ *" . $p['name'] . "*\n\n" .
+                      "💰 *Price:* " . formatPrice($p['price']) . "\n" .
+                      "📦 *Stock:* $stockBadge\n" .
+                      ($p['weight'] ? "⚖️ *Weight:* " . $p['weight'] . "g\n" : '') .
+                      "\n" . ($p['short_description'] ?: '') . "\n\n" .
+                      "Reply *1* to Buy Now  |  *2* to go back";
+
+        $messages = [];
+
+        // Try image first
+        $imgUrl = $this->getProductImageUrl($p['images']);
+        if ($imgUrl) {
+            $messages[] = ['_type' => 'image', '_payload' => ['link' => $imgUrl, 'caption' => $detailText]];
+        } else {
+            $messages[] = ['_type' => 'text', '_payload' => $detailText];
+        }
+
+        // Add buy/back interactive buttons
+        $messages[] = [
+            '_type' => 'interactive',
+            '_payload' => [
+                'type' => 'button',
+                'body' => ['text' => 'Choose an option:'],
+                'action' => [
+                    'buttons' => [
+                        ['type' => 'reply', 'reply' => ['id' => 'buy_' . $pId, 'title' => '🛒 Buy Now']],
+                        ['type' => 'reply', 'reply' => ['id' => 'menu_browse', 'title' => '↩️ Browse More']],
+                    ]
+                ]
+            ]
+        ];
+
+        return ['_type' => 'multi', '_messages' => $messages];
     }
 
     private function handleProductAction() {
