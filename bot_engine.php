@@ -420,14 +420,36 @@ class WhatsAppBot {
             try {
                 $this->pdo->beginTransaction();
                 
-                // Simplified order insertion
-                $stmt = $this->pdo->prepare("INSERT INTO orders (order_number, name, phone, address, subtotal, shipping, cod_fee, total, payment_method, order_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$orderNum, $data['name'], $this->from, $data['address'], $data['pPrice'], $data['shipping'], $data['cod_fee'], $data['total'], $data['payment'], $initialStatus]);
+                // Full order insert matching actual schema
+                $gst = round($data['pPrice'] * 0.18, 2); // 18% GST on product
+                $stmt = $this->pdo->prepare("INSERT INTO orders (order_number, user_id, name, email, phone, address, city, state, pincode, subtotal, discount, shipping, gst, cod_fee, total, coupon_code, payment_method, payment_status, order_status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([
+                    $orderNum,
+                    0, // guest order from WhatsApp
+                    $data['name'],
+                    '', // no email from WhatsApp
+                    $this->from,
+                    $data['address'],
+                    '', // city - not collected via bot
+                    '', // state
+                    '', // pincode
+                    $data['pPrice'], // subtotal
+                    0,  // discount
+                    $data['shipping'],
+                    $gst,
+                    $data['cod_fee'],
+                    $data['total'],
+                    '', // no coupon
+                    $data['payment'],
+                    'pending',
+                    $initialStatus,
+                    'Order via WhatsApp'
+                ]);
                 $orderId = $this->pdo->lastInsertId();
 
-                // Order Items
-                $stmtItem = $this->pdo->prepare("INSERT INTO order_items (order_id, product_id, product_name, quantity, price, total) VALUES (?, ?, ?, 1, ?, ?)");
-                $stmtItem->execute([$orderId, $data['pId'], $data['pName'], $data['pPrice'], $data['pPrice']]);
+                // Order Items - full schema
+                $stmtItem = $this->pdo->prepare("INSERT INTO order_items (order_id, product_id, product_name, product_image, size, color, quantity, price, discount_percent, total) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmtItem->execute([$orderId, $data['pId'], $data['pName'], '', '', '', 1, $data['pPrice'], 0, $data['pPrice']]);
 
                 $this->pdo->commit();
 
