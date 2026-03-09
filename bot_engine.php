@@ -440,8 +440,9 @@ class WhatsAppBot {
                     return "✅ Order #$orderNum created!\n\n💳 *Pay Securely*: $payLink\n\nYour order will be processed after payment confirmation.";
                 }
             } catch (Exception $e) {
-                $this->pdo->rollBack();
-                return "❌ Sorry, an error occurred while placing your order. Please try again or contact support.";
+                try { $this->pdo->rollBack(); } catch(Exception $rb) {}
+                error_log("WhatsApp Order Error: " . $e->getMessage() . " | Data: " . json_encode($data));
+                return "❌ Sorry, an error occurred while placing your order.\n\nError: " . $e->getMessage() . "\n\nPlease contact support or visit our website to place your order.";
             }
         }
         $this->saveSession('start', []);
