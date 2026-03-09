@@ -133,7 +133,7 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
     </div>
 
     <!-- STATS BAR -->
-    <div class="mobile-stats-row" style="margin:2rem 0;">
+    <div class="grid-4 mobile-stats-row" style="margin:2rem 0;">
       <?php
       $stats = [
         ['icon'=>'bi-truck','label'=>'Free Shipping','sub'=>'Over ₹999'],
@@ -143,13 +143,13 @@ foreach($countsRow as $row) $catCounts[$row['category_id']] = $row['cnt'];
       ];
       foreach($stats as $s):
       ?>
-      <div class="glass-card mobile-stats-item" style="gap:1rem;">
-        <div style="width:44px; height:44px; border-radius:12px; background:rgba(108,99,255,0.1); display:flex; align-items:center; justify-content:center;">
-          <i class="<?= $s['icon'] ?>" style="font-size:1.3rem; color:var(--primary);"></i>
+      <div class="glass-card premium-stats-item">
+        <div class="stats-icon-box">
+          <i class="<?= $s['icon'] ?>"></i>
         </div>
         <div>
-          <div style="font-weight:800; font-size:0.85rem; color:var(--text-primary); letter-spacing:-0.2px;"><?= $s['label'] ?></div>
-          <div style="font-size:0.7rem; color:var(--text-muted);"><?= $s['sub'] ?></div>
+          <div class="stats-label"><?= $s['label'] ?></div>
+          <div class="stats-sub"><?= $s['sub'] ?></div>
         </div>
       </div>
       <?php endforeach; ?>
