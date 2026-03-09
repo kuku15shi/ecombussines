@@ -156,23 +156,37 @@ try {
             overflow: hidden;
             margin-bottom: 2rem;
         }
-        .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-        .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); }
+        .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .wa-chat-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
         .wa-chat-item { padding: 0.875rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.25rem; cursor: pointer; transition: 0.2s; position: relative; }
         .wa-chat-item:hover { background: rgba(255,255,255,0.05); }
         .wa-chat-item.active { background: rgba(108,99,255,0.1); border: 1px solid var(--glass-border); }
         .unread-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: absolute; right: 1rem; top: 1.25rem; }
         
-        .chat-view { display: flex; flex-direction: column; background: rgba(0,0,0,0.02); }
-        .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); }
-        .chat-body { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .chat-view { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100%;
+            overflow: hidden;
+            background: rgba(0,0,0,0.02); 
+        }
+        .chat-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); flex-shrink: 0; }
+        .chat-body { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 1.5rem; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 1rem;
+            min-height: 0; /* CRITICAL: allows flex children to shrink */
+        }
         .msg { max-width: 75%; padding: 0.75rem 1rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; position: relative; }
         .msg.incoming { align-self: flex-start; background: var(--glass); border-bottom-left-radius: 2px; }
         .msg.outgoing { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
         .msg-time { font-size: 0.65rem; opacity: 0.6; margin-top: 4px; text-align: right; }
         
-        .chat-footer { padding: 1.25rem; border-top: 1px solid var(--border); background: var(--card-bg); }
+        .chat-footer { padding: 1.25rem; border-top: 1px solid var(--border); background: var(--card-bg); flex-shrink: 0; }
         .reply-box { display: flex; gap: 0.75rem; align-items: flex-end; }
         .reply-box textarea { flex: 1; min-height: 48px; max-height: 150px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: var(--radius-sm); padding: 0.75rem; color: var(--text-primary); outline: none; resize: none; }
         
