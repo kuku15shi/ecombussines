@@ -84,22 +84,16 @@ class WhatsAppBot {
             $this->saveSession('track_order_id');
             return "📦 Please enter your *Order ID*\n\nExample: _ORD12345_\n\nYou can find your Order ID in your confirmation email or SMS.";
         }
+        if ($id === 'menu_orders') {
+            return $this->myOrders();
+        }
+
         if ($id === 'menu_support') {
             return "👨‍💻 *Customer Support*\n\nPlease describe your issue and our team will reply shortly.\n\nOr call us at our support number.\n\nType MENU to return to the main menu.";
         }
         if ($id === 'menu_browse') {
-            $cats = $this->pdo->query("SELECT id, name FROM categories WHERE is_active = 1 LIMIT 8")->fetchAll();
-            $map = [];
-            $msg = "🛒 *Browse Our Collections*\n\nReply with a number to explore:\n";
-            foreach($cats as $i => $c) {
-                $idx = $i + 1;
-                $msg .= "\n$idx. " . $c['name'];
-                $map[$idx] = $c['id'];
-            }
-            $data = $this->session['data'];
-            $data['map'] = $map;
-            $this->saveSession('category_list', $data);
-            return $msg . "\n\nOr type any product name to search.";
+            // Browse feature removed - show menu
+            return $this->mainMenu();
         }
 
         if (strpos($id, 'buy_') === 0) {
@@ -166,27 +160,12 @@ class WhatsAppBot {
     }
 
     private function mainMenu() {
-        $this->saveSession('start');
-        
-        // Dynamic Categories for text body
-        $cats = $this->pdo->query("SELECT id, name FROM categories WHERE is_active = 1 LIMIT 5")->fetchAll();
-        $catList = "";
-        $map = [];
-        if($cats) {
-            $catList = "\n\n🛍️ *Shop by Category:*\n";
-            foreach($cats as $i => $c) {
-                $idx = $i + 5;
-                $catList .= "$idx. " . $c['name'] . "\n";
-                $map[$idx] = $c['id'];
-            }
-            $data = $this->session['data'];
-            $data['map'] = $map;
-            $this->saveSession('start', $data);
-        }
+        $this->saveSession('start', []);
 
         $bodyText = "👋 *Welcome to " . SITE_NAME . "!*\n\nHow can I help you today?\n\n" .
-                    "📦 Track Order\n🛍️ Browse Products\n💬 Talk to Support" .
-                    $catList . "\nOr type a product name to search.";
+                    "📦 Track Order — Check your order status\n" .
+                    "📝 My Orders — View recent orders\n" .
+                    "💬 Talk to Support";
 
         // Return interactive button message
         return [
@@ -198,7 +177,7 @@ class WhatsAppBot {
                 "action" => [
                     "buttons" => [
                         ["type" => "reply", "reply" => ["id" => "menu_track", "title" => "📦 Track Order"]],
-                        ["type" => "reply", "reply" => ["id" => "menu_browse", "title" => "🛍️ Browse Shop"]],
+                        ["type" => "reply", "reply" => ["id" => "menu_orders", "title" => "� My Orders"]],
                         ["type" => "reply", "reply" => ["id" => "menu_support", "title" => "💬 Support"]]
                     ]
                 ]
@@ -238,22 +217,17 @@ class WhatsAppBot {
 
     private function handleMainMenu($forcedText = null) {
         $input = $forcedText ?: $this->text;
-        $map = $this->session['data']['map'] ?? [];
 
         if (in_array($input, ['1', '2'])) {
             $this->saveSession('track_order_id');
-            return "📦 Please enter your Order ID\nExample: ORD12345";
+            return "📦 Please enter your *Order ID*\nExample: _ORD12345_";
         } elseif ($input == '3') {
             return $this->myOrders();
         } elseif ($input == '4') {
             return "👨‍💻 *Customer Support*\n\nPlease describe your issue.\nOur team will reply shortly.\n\nType MENU to return.";
-        } elseif (isset($map[$input])) {
-            // Redirect to category flow
-            $this->saveSession('category_list', $this->session['data']);
-            return $this->handleCategorySelection($input);
         }
 
-        // Search logic if not a number
+        // Search logic if text entered
         if (!is_numeric($input) && strlen($input) > 2) {
             return $this->handleSearch();
         }
