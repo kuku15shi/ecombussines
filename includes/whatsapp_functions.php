@@ -70,6 +70,10 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'text', $templateName = 
             "link" => $messageBody['link'],
             "caption" => $messageBody['caption'] ?? ''
         ];
+    } elseif ($type === 'audio') {
+        $data["audio"] = [
+            "link" => $messageBody['link']
+        ];
     } else {
         $data["text"] = ["body" => $messageBody];
     }

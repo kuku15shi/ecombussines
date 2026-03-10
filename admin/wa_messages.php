@@ -214,6 +214,31 @@ try {
         .quick-replies { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; overflow-x: auto; padding-bottom: 0.4rem; }
         .qr-btn { padding: 0.35rem 0.75rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px; font-size: 0.72rem; cursor: pointer; white-space: nowrap; color: var(--text-secondary); }
         .qr-btn:hover { background: var(--primary); color: #fff; }
+        
+        /* Voice Recording UI Styles */
+        .voice-rec-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: var(--card-bg);
+            z-index: 20;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+        .voice-rec-overlay.active { display: flex; }
+        .recording-indicator { display: flex; align-items: center; gap: 0.75rem; color: var(--danger); font-weight: 600; }
+        .recording-dot { width: 10px; height: 10px; background: var(--danger); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        .voice-controls { display: flex; gap: 1rem; }
+        .voice-btn { border: none; background: none; font-size: 1.25rem; cursor: pointer; transition: 0.2s; }
+        .voice-btn.cancel { color: var(--text-muted); }
+        .voice-btn.stop { color: var(--primary); }
+        .voice-btn:hover { transform: scale(1.15); }
+        .btn-mic { background: var(--glass); border: 1px solid var(--glass-border); color: var(--primary); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: 0.3s; cursor: pointer; }
+        .btn-mic:hover { background: var(--primary); color: #fff; }
+        .btn-mic.recording { background: var(--danger); color: #fff; border-color: transparent; }
 
         .tabs-nav { display: flex; gap: 2rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); overflow-x: auto; }
         .tab-link { padding: 0.75rem 0.25rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
@@ -302,15 +327,28 @@ try {
                             <button class="qr-btn" onclick="applyMacro('<?= addslashes($mac['content']) ?>')"><?= htmlspecialchars($mac['title']) ?></button>
                             <?php endforeach; ?>
                         </div>
-                        <form method="POST" action="wa_messages.php?phone=<?= $activePhone ?>&tab=chat">
+                        <form method="POST" action="wa_messages.php?phone=<?= $activePhone ?>&tab=chat" id="textReplyForm">
                             <?= csrfField() ?>
                             <input type="hidden" name="phone" value="<?= $activePhone ?>">
                             <input type="hidden" name="send_reply" value="1">
                             <div class="reply-box">
+                                <button type="button" class="btn-mic" id="startVoiceBtn" onclick="startVoiceRecording()"><i class="bi bi-mic-fill"></i></button>
                                 <textarea name="message" id="messageInput" placeholder="Type your message..." required></textarea>
                                 <button type="submit" class="btn-primary" style="padding: 0.8rem;"><i class="bi bi-send-fill"></i></button>
                             </div>
                         </form>
+                        
+                        <!-- Voice Recording UI -->
+                        <div class="voice-rec-overlay" id="voiceOverlay">
+                            <div class="recording-indicator">
+                                <div class="recording-dot"></div>
+                                <span id="recordingTimer">00:00</span>
+                            </div>
+                            <div class="voice-controls">
+                                <button class="voice-btn cancel" onclick="cancelVoiceRecording()" title="Cancel"><i class="bi bi-trash3-fill"></i></button>
+                                <button class="voice-btn stop" onclick="stopVoiceRecording()" title="Send"><i class="bi bi-send-fill"></i></button>
+                            </div>
+                        </div>
                     </div>
                     <?php else: ?>
                     <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--text-muted);">
@@ -590,6 +628,97 @@ try {
 
     const win = document.getElementById('chatWindow');
     if(win) win.scrollTop = win.scrollHeight;
+
+    // VOICE RECORDING LOGIC
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordingStartTime;
+    let timerInterval;
+
+    async function startVoiceRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            return alert("Voice recording is not supported in this browser.");
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/ogg; codecs=opus' });
+                if (audioChunks.length > 0) {
+                    await uploadVoiceMessage(audioBlob);
+                }
+                stream.getTracks().forEach(track => track.stop()); // Release mic
+            };
+
+            mediaRecorder.start();
+            
+            // Show UI
+            document.getElementById('voiceOverlay').classList.add('active');
+            recordingStartTime = Date.now();
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+            
+        } catch (err) {
+            console.error("Error accessing mic:", err);
+            alert("Could not access microphone.");
+        }
+    }
+
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const secs = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('recordingTimer').textContent = `${mins}:${secs}`;
+    }
+
+    function stopVoiceRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            hideVoiceOverlay();
+        }
+    }
+
+    function cancelVoiceRecording() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            audioChunks = []; // Clear chunks so it doesn't upload on stop
+            mediaRecorder.stop();
+            hideVoiceOverlay();
+        }
+    }
+
+    function hideVoiceOverlay() {
+        clearInterval(timerInterval);
+        document.getElementById('voiceOverlay').classList.remove('active');
+    }
+
+    async function uploadVoiceMessage(blob) {
+        const formData = new FormData();
+        formData.append('audio', blob, 'recording.ogg');
+        formData.append('phone', '<?= $activePhone ?>');
+
+        try {
+            const resp = await fetch('ajax/upload_voice.php', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            if (data.success) {
+                location.reload(); // Reload to show the new message
+            } else {
+                alert(data.message);
+            }
+        } catch (err) {
+            console.error("Upload failed:", err);
+            alert("Failed to send voice message.");
+        }
+    }
 </script>
 </body>
 </html>
