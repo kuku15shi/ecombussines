@@ -159,9 +159,21 @@ try {
             position: relative;
         }
         @media (max-width: 768px) {
-            .wa-layout { grid-template-columns: 1fr; height: 85vh; max-height: unset; margin: -1rem; width: calc(100% + 2rem); border: none; border-radius: 0; }
-            .wa-sidebar { width: 100%; display: <?= $activePhone ? 'none' : 'flex' ?>; }
-            .chat-view { display: <?= $activePhone ? 'flex' : 'none' ?>; }
+            .wa-layout { 
+                grid-template-columns: 1fr; 
+                height: calc(100vh - 120px); 
+                max-height: unset; 
+                margin: -1.5rem -1.25rem 0; 
+                width: calc(100% + 2.5rem); 
+                border: none; 
+                border-radius: 0; 
+                z-index: 100;
+            }
+            .wa-sidebar { width: 100% !important; display: <?= $activePhone ? 'none' : 'flex' ?> !important; }
+            .chat-view { width: 100% !important; display: <?= $activePhone ? 'flex' : 'none' ?> !important; }
+            .admin-layout .main-content { padding: 0 !important; }
+            .content-area { padding: 0 !important; }
+            .msg { max-width: 88% !important; }
         }
         .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; background: var(--bg-card); }
         .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
@@ -201,13 +213,15 @@ try {
         .chat-body { 
             position: absolute;
             top: 65px;
-            bottom: 135px; /* approx footer height */
+            bottom: 110px; /* footer height */
             left: 0; right: 0;
             overflow-y: auto; 
-            padding: 1rem 1.5rem; 
+            padding: 1rem 1rem; 
             display: flex; 
             flex-direction: column; 
             gap: 1rem;
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* subtle WA wallpaper */
+            background-blend-mode: overlay;
         }
         .msg { max-width: 75%; padding: 0.75rem 1rem; border-radius: 14px; font-size: 0.9rem; line-height: 1.5; position: relative; }
         .msg.incoming { align-self: flex-start; background: var(--glass); border-bottom-left-radius: 2px; }
@@ -328,10 +342,16 @@ try {
                             $msgText = $m['message'];
                             if (strpos($msgText, '[AUDIO]:') === 0) {
                                 $audioUrl = substr($msgText, 8);
-                                echo '<audio controls style="max-width:200px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
+                                echo '<div class="audio-msg" style="display:flex; flex-direction:column; gap:5px;">';
+                                echo '<audio controls style="max-width:220px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
+                                echo '<a href="'.$audioUrl.'" target="_blank" style="font-size:0.65rem; color:inherit; opacity:0.7; text-decoration:underline;">Download Voice Message</a>';
+                                echo '</div>';
                             } elseif (strpos($msgText, '[Voice Message]:') === 0) {
                                 $audioUrl = substr($msgText, 16);
-                                echo '<audio controls style="max-width:200px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
+                                echo '<div class="audio-msg" style="display:flex; flex-direction:column; gap:5px;">';
+                                echo '<audio controls style="max-width:220px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
+                                echo '<a href="'.$audioUrl.'" target="_blank" style="font-size:0.65rem; color:inherit; opacity:0.7; text-decoration:underline;">Download Voice Message</a>';
+                                echo '</div>';
                             } elseif (strpos($msgText, '[IMAGE]:') === 0) {
                                 $imgUrl = substr($msgText, 8);
                                 echo '<a href="'.$imgUrl.'" target="_blank"><img src="'.$imgUrl.'" style="max-width:100%; border-radius:8px;"></a>';
