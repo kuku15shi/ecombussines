@@ -1616,6 +1616,79 @@ select.form-control option {
   }
 }
 
+/* ===== MOBILE QUICK-NAV BAR (Products + Categories) ===== */
+.mobile-nav-links {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: var(--drop-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  position: sticky;
+  top: 57px;
+  /* just below mobile-header */
+  z-index: 998;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+[data-theme="light"] .mobile-nav-links {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 992px) {
+  .mobile-nav-links {
+    display: flex;
+  }
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: 50px;
+  transition: all 0.25s ease;
+  font-family: var(--font);
+  flex: 1;
+  justify-content: center;
+}
+
+.mobile-nav-link i {
+  font-size: 1rem;
+  color: var(--text-muted);
+  transition: color 0.25s;
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link.active,
+.mobile-nav-link.active-nav {
+  color: var(--primary);
+  background: rgba(108, 99, 255, 0.08);
+}
+
+.mobile-nav-link:hover i,
+.mobile-nav-link.active i,
+.mobile-nav-link.active-nav i {
+  color: var(--primary);
+}
+
+.mobile-nav-divider {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
 /* ===== BOTTOM NAVIGATION (Mobile App Type) ===== */
 .bottom-nav {
   position: fixed;
@@ -1717,7 +1790,7 @@ select.form-control option {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
-@media (max-width: 992px) {
+@media (max-width: 768px) {
   .mobile-header {
     display: flex;
     width: 100%;
@@ -2893,20 +2966,6 @@ select.form-control option {
   display: block !important;
 }
 
-@media (min-width: 992px) {
-  .d-lg-none {
-    display: none !important;
-  }
-
-  .d-lg-flex {
-    display: flex !important;
-  }
-
-  .d-lg-block {
-    display: block !important;
-  }
-}
-
 @media (min-width: 768px) {
   .d-md-none {
     display: none !important;
@@ -2917,6 +2976,20 @@ select.form-control option {
   }
 
   .d-md-block {
+    display: block !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .d-lg-none {
+    display: none !important;
+  }
+
+  .d-lg-flex {
+    display: flex !important;
+  }
+
+  .d-lg-block {
     display: block !important;
   }
 }

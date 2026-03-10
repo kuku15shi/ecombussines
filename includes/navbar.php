@@ -23,7 +23,7 @@ $categories = getCategories($pdo);
         </button>
         <div class="search-results-dropdown" id="searchDropdown"></div>
       </form>
-      <div style="display:flex; align-items:center; gap:0.25rem;" class="d-none d-lg-flex">
+      <div style="display:flex; align-items:center; gap:0.25rem;" class="d-none d-md-flex">
         <a href="<?= SITE_URL ?>/index" class="nav-link">Home</a>
         <a href="<?= SITE_URL ?>/products" class="nav-link">Products</a>
         <div style="position:relative;" id="catDropdown">
@@ -67,7 +67,7 @@ $categories = getCategories($pdo);
         <?php else: ?>
         <a href="<?= SITE_URL ?>/login" class="btn-primary-luxury" style="padding:0.5rem 1.25rem; font-size:0.82rem;"><i class="bi bi-person"></i> Login</a>
         <?php endif; ?>
-        <button class="nav-icon-btn d-lg-none" id="mobileMenuBtn" onclick="toggleMobileMenu()"><i class="bi bi-list"></i></button>
+        <button class="nav-icon-btn d-md-none" id="mobileMenuBtn" onclick="toggleMobileMenu()"><i class="bi bi-list"></i></button>
       </div>
     </div>
   </div>
