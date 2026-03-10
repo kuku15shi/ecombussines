@@ -271,7 +271,7 @@ $pageTitle = $category_slug ? ucfirst(str_replace('-', ' ', $category_slug)) : (
     </div>
   </div>
 </div>
-<div id="filterOverlay" onclick="toggleFilters()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1999; backdrop-filter:blur(4px);"></div>
+
 
 <?php include 'includes/footer.php'; ?>
 
@@ -305,7 +305,9 @@ $pageTitle = $category_slug ? ucfirst(str_replace('-', ' ', $category_slug)) : (
       const sidebar = document.querySelector('.filters-sidebar');
       const overlay = document.getElementById('filterOverlay');
       const isActive = sidebar.classList.toggle('active');
-      overlay.style.display = isActive ? 'block' : 'none';
+      if (overlay) {
+        overlay.style.display = isActive ? 'block' : 'none';
+      }
       document.body.style.overflow = isActive ? 'hidden' : '';
     }
 

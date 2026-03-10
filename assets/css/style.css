@@ -2487,21 +2487,28 @@ select.form-control option {
     gap: 1rem;
   }
 
+  /* Filter sidebar slides in from the RIGHT on mobile */
   .filters-sidebar {
     position: fixed;
     top: 0;
-    left: 0;
-    width: 280px;
-    height: 100vh;
+    right: 0;
+    left: auto;
+    width: min(300px, 85vw);
+    height: 100dvh;
     z-index: 2000;
-    transform: translateX(-100%);
-    transition: var(--transition);
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.7, 0, 0.3, 1);
     background: var(--bg-dark);
+    overflow: hidden;
+  }
+
+  [data-theme="light"] .filters-sidebar {
+    background: #f8f9fa;
   }
 
   .filters-sidebar.active {
     transform: translateX(0);
-    box-shadow: 20px 0 60px rgba(0, 0, 0, 0.4);
+    box-shadow: -20px 0 60px rgba(0, 0, 0, 0.4);
   }
 
   .filters-sidebar .glass-card {
@@ -2509,7 +2516,8 @@ select.form-control option {
     border-radius: 0;
     overflow-y: auto;
     border: none;
-    border-right: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    padding: 1.5rem !important;
   }
 }
 
