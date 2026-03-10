@@ -10,7 +10,7 @@
   </div>
 
   <!-- Center: Products + Categories quick links -->
-  <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1; justify-content: center; padding: 0 0.5rem;">
+  <!-- <div style="display: flex; align-items: center; gap: 0.4rem; flex: 1; justify-content: center; padding: 0 0.5rem;">
     <a href="<?= SITE_URL ?>/products"
        style="display:flex; align-items:center; gap:0.35rem; padding:0.35rem 0.85rem; border-radius:50px; font-size:0.8rem; font-weight:700; color:<?= (basename($_SERVER['PHP_SELF']) === 'products.php' && !isset($_GET['category'])) ? '#fff' : 'var(--text-secondary)' ?>; background:<?= (basename($_SERVER['PHP_SELF']) === 'products.php' && !isset($_GET['category'])) ? 'linear-gradient(135deg, var(--primary), var(--primary-dark))' : 'var(--glass)' ?>; border:1px solid <?= (basename($_SERVER['PHP_SELF']) === 'products.php' && !isset($_GET['category'])) ? 'transparent' : 'var(--glass-border)' ?>; text-decoration:none; white-space:nowrap; transition:all 0.25s;">
       <i class="bi bi-grid-3x3-gap-fill" style="font-size:0.8rem;"></i> Products
@@ -19,7 +19,7 @@
        style="display:flex; align-items:center; gap:0.35rem; padding:0.35rem 0.85rem; border-radius:50px; font-size:0.8rem; font-weight:700; color:var(--text-secondary); background:var(--glass); border:1px solid var(--glass-border); cursor:pointer; white-space:nowrap; transition:all 0.25s; font-family:var(--font);">
       <i class="bi bi-tag-fill" style="font-size:0.8rem;"></i> Categories <i class="bi bi-chevron-down" style="font-size:0.6rem;"></i>
     </button>
-  </div>
+  </div> -->
 
   <!-- Right: Theme + Search -->
   <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink:0;">
