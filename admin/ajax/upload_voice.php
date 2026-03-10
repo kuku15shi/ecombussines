@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['audio'])) {
 
         if ($res['status'] === 'success') {
             $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-                ->execute([$phone, '[Voice Message]']);
+                ->execute([$phone, '[AUDIO]:' . $audioUrl]);
             
             echo json_encode(['success' => true, 'message' => 'Voice message sent!']);
         } else {

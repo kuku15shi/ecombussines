@@ -148,22 +148,28 @@ try {
         .wa-layout { 
             display: grid; 
             grid-template-columns: 320px 1fr; 
-            height: 70vh;
+            height: 75vh;
             min-height: 500px;
-            max-height: 800px;
-            background: var(--glass); 
-            border: 1px solid var(--glass-border); 
+            max-height: 900px;
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
             border-radius: var(--radius); 
             overflow: hidden;
             margin-bottom: 2rem;
+            position: relative;
         }
-        .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        @media (max-width: 768px) {
+            .wa-layout { grid-template-columns: 1fr; height: 85vh; max-height: unset; margin: -1rem; width: calc(100% + 2rem); border: none; border-radius: 0; }
+            .wa-sidebar { width: 100%; display: <?= $activePhone ? 'none' : 'flex' ?>; }
+            .chat-view { display: <?= $activePhone ? 'flex' : 'none' ?>; }
+        }
+        .wa-sidebar { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; background: var(--bg-card); }
         .wa-search { padding: 1rem; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .wa-chat-list { flex: 1; overflow-y: auto; padding: 0.5rem; min-height: 0; }
-        .wa-chat-item { padding: 0.875rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.25rem; cursor: pointer; transition: 0.2s; position: relative; }
-        .wa-chat-item:hover { background: rgba(255,255,255,0.05); }
-        .wa-chat-item.active { background: rgba(108,99,255,0.1); border: 1px solid var(--glass-border); }
-        .unread-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: absolute; right: 1rem; top: 1.25rem; }
+        .wa-chat-item { padding: 1.25rem 1rem; border-radius: var(--radius-sm); margin-bottom: 0.25rem; cursor: pointer; transition: 0.2s; position: relative; border: 1px solid transparent; }
+        .wa-chat-item:hover { background: rgba(108,99,255,0.03); }
+        .wa-chat-item.active { background: rgba(108,99,255,0.1); border-color: rgba(108,99,255,0.2); }
+        .unread-dot { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; position: absolute; right: 1.25rem; top: 1.5rem; box-shadow: 0 0 10px rgba(108,99,255,0.5); }
         
         /* ABSOLUTE POSITIONING APPROACH - BULLETPROOF */
         .chat-view { 
@@ -295,27 +301,44 @@ try {
                 <div class="chat-view">
                     <?php if($activePhone): ?>
                     <div class="chat-header">
-                        <div>
-                            <div style="font-weight:800;"><?= $activePhone ?></div>
-                            <div style="font-size:0.7rem; color:var(--text-muted);">
-                                Assigned: 
-                                <select onchange="location.href='?tab=chat&phone=<?= $activePhone ?>&assign_phone=<?= $activePhone ?>&agent_id='+this.value">
-                                    <option value="">Unassigned</option>
-                                    <?php foreach($admins as $adm): ?>
-                                    <option value="<?= $adm['id'] ?>" <?= ($messages[0]['assigned_to'] ?? '') == $adm['id'] ? 'selected' : '' ?>><?= $adm['name'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <a href="?tab=chat" class="btn-icon d-md-none" style="width:36px; height:36px;"><i class="bi bi-chevron-left"></i></a>
+                            <div>
+                                <div style="font-weight:800; font-size:1.1rem; line-height:1;"><?= $activePhone ?></div>
+                                <div style="font-size:0.7rem; color:var(--text-muted); margin-top:2px;">
+                                    Assigned: 
+                                    <select style="background:none; border:none; padding:0; font-size:inherit; color:var(--primary); font-weight:600;" onchange="location.href='?tab=chat&phone=<?= $activePhone ?>&assign_phone=<?= $activePhone ?>&agent_id='+this.value">
+                                        <option value="">Unassigned</option>
+                                        <?php foreach($admins as $adm): ?>
+                                        <option value="<?= $adm['id'] ?>" <?= ($messages[0]['assigned_to'] ?? '') == $adm['id'] ? 'selected' : '' ?>><?= $adm['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <div style="display:flex; gap:0.5rem;">
-                            <a href="orders.php?search=<?= $activePhone ?>" class="btn-primary btn-sm">Orders</a>
+                            <a href="orders.php?search=<?= $activePhone ?>" class="btn-primary btn-sm d-none d-sm-flex">Orders</a>
                             <button class="btn-icon" title="Resolve Chat"><i class="bi bi-check2-circle"></i></button>
                         </div>
                     </div>
                     <div class="chat-body" id="chatWindow">
                         <?php foreach($messages as $m): ?>
                         <div class="msg <?= $m['direction'] ?>">
-                            <?= nl2br(htmlspecialchars($m['message'])) ?>
+                            <?php 
+                            $msgText = $m['message'];
+                            if (strpos($msgText, '[AUDIO]:') === 0) {
+                                $audioUrl = substr($msgText, 8);
+                                echo '<audio controls style="max-width:200px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
+                            } elseif (strpos($msgText, '[Voice Message]:') === 0) {
+                                $audioUrl = substr($msgText, 16);
+                                echo '<audio controls style="max-width:200px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
+                            } elseif (strpos($msgText, '[IMAGE]:') === 0) {
+                                $imgUrl = substr($msgText, 8);
+                                echo '<a href="'.$imgUrl.'" target="_blank"><img src="'.$imgUrl.'" style="max-width:100%; border-radius:8px;"></a>';
+                            } else {
+                                echo nl2br(htmlspecialchars($msgText));
+                            }
+                            ?>
                             <div class="msg-time"><?= date('h:i A', strtotime($m['created_at'])) ?></div>
                         </div>
                         <?php endforeach; ?>

@@ -40,6 +40,18 @@ if (isset($message['text']['body'])) {
 } elseif (isset($message['interactive']['button_reply']['id'])) {
     $buttonId = $message['interactive']['button_reply']['id'];
     $text = $message['interactive']['button_reply']['title'];
+} elseif (isset($message['audio']['id'])) {
+    $audioId = $message['audio']['id'];
+    $localUrl = downloadWhatsAppMedia($audioId);
+    if ($localUrl) {
+        $text = "[AUDIO]:" . $localUrl;
+    } else {
+        $text = "[Voice Message - Failed to download]";
+    }
+} elseif (isset($message['image']['id'])) {
+    $imgId = $message['image']['id'];
+    $localUrl = downloadWhatsAppMedia($imgId);
+    $text = $localUrl ? "[IMAGE]:" . $localUrl : "[Image - Failed]";
 }
 
 file_put_contents(__DIR__ . '/webhook_debug.log', date('[Y-m-d H:i:s] ') . "Message from: $from | Text: $text | ButtonID: $buttonId\n", FILE_APPEND);

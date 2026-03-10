@@ -335,5 +335,42 @@ function trackOrderOnWhatsApp($orderId, $phone) {
 
     return $msg;
 }
+/**
+ * Download Media from Meta
+ */
+function downloadWhatsAppMedia($mediaId) {
+    if (!$mediaId) return false;
+    $wa = getWhatsAppConfig();
+    
+    // 1. Get the URL for the media
+    $getUrl = "https://graph.facebook.com/" . $wa['version'] . "/" . $mediaId;
+    $ch = curl_init($getUrl);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer " . $wa['token']]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $res = curl_exec($ch);
+    curl_close($ch);
+    $data = json_decode($res, true);
+    
+    if (empty($data['url'])) return false;
+    $waUrl = $data['url'];
+    $ext = explode('/', $data['mime_type'])[1] ?? 'bin';
+    if ($ext === 'ogg; codecs=opus') $ext = 'ogg';
 
+    // 2. Download actual bytes
+    $ch = curl_init($waUrl);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer " . $wa['token'], "User-Agent: curl"]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    $bytes = curl_exec($ch);
+    curl_close($ch);
 
+    if (!$bytes) return false;
+
+    // 3. Save locally
+    $dir = __DIR__ . '/../uploads/whatsapp_media/';
+    if (!is_dir($dir)) mkdir($dir, 0777, true);
+    $fileName = 'media_' . time() . '_' . $mediaId . '.' . $ext;
+    file_put_contents($dir . $fileName, $bytes);
+
+    return SITE_URL . '/uploads/whatsapp_media/' . $fileName;
+}
