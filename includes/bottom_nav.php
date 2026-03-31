@@ -12,12 +12,9 @@ $wishlistCount = getWishlistCount($pdo);
     <i class="bi <?= $currentPage == 'products.php' ? 'bi-grid-fill' : 'bi-grid' ?>"></i>
     <span>Shop</span>
   </a>
-  <a href="<?= SITE_URL ?>/wishlist" class="bottom-nav-item <?= $currentPage == 'wishlist.php' ? 'active' : '' ?>">
-    <i class="bi <?= $currentPage == 'wishlist.php' ? 'bi-heart-fill' : 'bi-heart' ?>"></i>
-    <?php if($wishlistCount > 0): ?>
-      <span class="badge-count"><?= $wishlistCount ?></span>
-    <?php endif; ?>
-    <span>Wishlist</span>
+  <a href="<?= SITE_URL ?>/videos.php" class="bottom-nav-item <?= $currentPage == 'videos.php' ? 'active' : '' ?>">
+    <i class="bi <?= $currentPage == 'videos.php' ? 'bi-play-btn-fill' : 'bi-play-btn' ?>"></i>
+    <span>Videos</span>
   </a>
   <a href="<?= SITE_URL ?>/cart" class="bottom-nav-item <?= $currentPage == 'cart.php' ? 'active' : '' ?>">
     <i class="bi <?= $currentPage == 'cart.php' ? 'bi-bag-heart-fill' : 'bi-bag-heart' ?>"></i>

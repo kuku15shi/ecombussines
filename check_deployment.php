@@ -1,6 +1,6 @@
 <?php
 /**
- * Master Fix Script for LuxeStore Deployment
+ * Master Fix Script for MIZ MAX Deployment
  * Runs database migrations, directory checks, and security hardening.
  */
 
@@ -12,7 +12,7 @@ if (!isAdminLoggedIn()) {
     die("Unauthorized access. Please login as admin first.");
 }
 
-echo "<h1>LuxeStore Deployment Fixer</h1>";
+echo "<h1>MIZ MAX Deployment Fixer</h1>";
 
 // 1. Directory Checks
 $dirs = [
@@ -46,7 +46,7 @@ try {
       PRIMARY KEY (`id`),
       UNIQUE KEY `config_key` (`config_key`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-    
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS `bot_faqs` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `question` text NOT NULL,
@@ -56,7 +56,7 @@ try {
       `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-    
+
     $pdo->exec("CREATE TABLE IF NOT EXISTS `whatsapp_macros` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `title` varchar(100) NOT NULL,
@@ -64,10 +64,10 @@ try {
       `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-    
+
     $pdo->exec("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS assigned_to INT DEFAULT NULL");
     $pdo->exec("ALTER TABLE whatsapp_messages ADD COLUMN IF NOT EXISTS chat_status ENUM('open','resolved','blocked') DEFAULT 'open'");
-    
+
     echo "✅ Database schema updated!<br>";
 } catch (Exception $e) {
     echo "❌ Database error: " . $e->getMessage() . "<br>";

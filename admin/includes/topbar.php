@@ -46,6 +46,56 @@ function closeSidebar() {
   document.body.style.overflow = '';
 }
 
+// --- NEW ORDER NOTIFICATIONS (WEB PUSH SIMULATION) ---
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+async function checkNewOrders() {
+    try {
+        const res = await fetch('ajax/get_latest_order.php');
+        const data = await res.json();
+        
+        if (data.success && data.latest_order) {
+            const order = data.latest_order;
+            const lastSeen = localStorage.getItem('last_seen_order_id') || 0;
+            
+            if (Number(order.id) > Number(lastSeen)) {
+                // If it's a first load, just set the ID and don't notify (to avoid spamming)
+                if (lastSeen > 0) {
+                    showOrderNotification(order);
+                }
+                localStorage.setItem('last_seen_order_id', order.id);
+            }
+        }
+    } catch (e) { console.error('Order check failed:', e); }
+}
+
+function showOrderNotification(order) {
+    // 1. Play Sound
+    notificationSound.play().catch(e => console.warn('Sound blocked by browser policy.'));
+
+    // 2. Browser Notification
+    if ("Notification" in window) {
+        if (Notification.permission === "granted") {
+            const n = new Notification("🚀 New Order Received!", {
+                body: `Order #${order.order_number} by ${order.name} - Total: ₹${Number(order.total).toLocaleString()}`,
+                icon: 'https://cdn-icons-png.flaticon.com/512/1162/1162456.png'
+            });
+            n.onclick = () => { window.location.href = `order_detail.php?id=${order.id}`; n.close(); };
+        }
+    }
+}
+
+// Request Permission on first load
+document.addEventListener('DOMContentLoaded', () => {
+    if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+    // Start Polling every 15 seconds
+    setInterval(checkNewOrders, 15000);
+    checkNewOrders(); // Initial check
+});
+// ---------------------------------------------------
+
 // Close sidebar on desktop resize
 window.addEventListener('resize', () => {
   if (window.innerWidth > 991) closeSidebar();

@@ -3,14 +3,14 @@ require_once __DIR__ . '/config.php'; // Load secrets via config.php
 
 define('DB_HOST', DB_HOST_VAL);
 define('DB_USER', DB_USER_VAL);
-define('DB_PASS', DB_PASSWORD_VAL); 
+define('DB_PASS', DB_PASSWORD_VAL);
 define('DB_NAME', DB_NAME_VAL);
 
-define('SITE_NAME', 'LuxeStore');
+define('SITE_NAME', 'MIZ MAX');
 
 // Dynamic SITE_URL Detection
 $protocol = (
-    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || 
+    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
     (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
     (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)
 ) ? "https" : "http";
@@ -41,9 +41,10 @@ define('RAZORPAY_KEY_SECRET', RAZORPAY_KEY_SECRET_VAL);
 
 // --- WhatsApp Business API ---
 define('WA_ACCESS_TOKEN', WA_ACCESS_TOKEN_VAL);
+define('ADMIN_PHONE', ADMIN_PHONE_VAL);
 define('WA_PHONE_NUMBER_ID', '983614081506207');
 define('WA_VERSION', 'v20.0');
-define('WA_WEBHOOK_VERIFY_TOKEN', 'LuxeStoreWebHook2026');
+define('WA_WEBHOOK_VERIFY_TOKEN', 'MIZ MAXWebHook2026');
 
 
 // Load Security Middleware (Session, CSRF, PDO)
@@ -58,30 +59,35 @@ if ($conn->connect_error) {
 $conn->set_charset('utf8mb4');
 
 // Enhanced Sanitize for XSS & SQLi (Legacy)
-function sanitize($conn, $str) {
+function sanitize($conn, $str)
+{
     return $conn->real_escape_string(htmlspecialchars(strip_tags(trim($str))));
 }
 
-function generateSlug($name) {
+function generateSlug($name)
+{
     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
     return $slug;
 }
 
-function generateOrderNumber() {
+function generateOrderNumber()
+{
     return 'LUXE' . strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 8));
 }
 
-function formatPrice($price) {
+function formatPrice($price)
+{
     return CURRENCY . number_format($price, 2);
 }
 
-function getDiscountedPrice($price, $discount) {
+function getDiscountedPrice($price, $discount)
+{
     return $price - ($price * $discount / 100);
 }
 
 
 // --- Affiliate Program Constants ---
-define('AFFILIATE_COMMISSION_PERCENT', 10.00); 
+define('AFFILIATE_COMMISSION_PERCENT', 10.00);
 define('AFFILIATE_COOKIE_DAYS', 30);
 define('AFFILIATE_MIN_WITHDRAWAL', 500);
 
@@ -89,7 +95,7 @@ define('AFFILIATE_MIN_WITHDRAWAL', 500);
 if (isset($_GET['ref'])) {
     require_once __DIR__ . '/AffiliateClass.php';
     $affSystem = new AffiliateSystem($pdo);
-    
+
     $refCode = sanitize($conn, $_GET['ref']);
     $stmt = $pdo->prepare("SELECT id FROM affiliates WHERE referral_code = ? AND status = 'approved'");
     $stmt->execute([$refCode]);
@@ -98,7 +104,7 @@ if (isset($_GET['ref'])) {
     if ($aff) {
         $affId = $aff['id'];
         $currentAffId = $_SESSION['affiliate_id'] ?? 0;
-        
+
         if ($affId != $currentAffId) {
             setcookie('luxe_affiliate_id', $affId, time() + (86400 * AFFILIATE_COOKIE_DAYS), "/");
             $affSystem->logClick($affId);

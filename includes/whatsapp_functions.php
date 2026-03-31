@@ -60,20 +60,17 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'text', $templateName = 
         // messageBody is expected to be the interactive array
         $data["interactive"] = $messageBody;
     } elseif ($type === 'image') {
-        // messageBody = ['link' => url, 'caption' => text]
-        $data["image"] = [
-            "link" => $messageBody['link'],
-            "caption" => $messageBody['caption'] ?? ''
-        ];
+        $data["image"] = isset($messageBody['id']) ? ["id" => $messageBody['id']] : ["link" => $messageBody['link']];
+        if (!empty($messageBody['caption'])) $data["image"]["caption"] = $messageBody['caption'];
     } elseif ($type === 'video') {
-        $data["video"] = [
-            "link" => $messageBody['link'],
-            "caption" => $messageBody['caption'] ?? ''
-        ];
+        $data["video"] = isset($messageBody['id']) ? ["id" => $messageBody['id']] : ["link" => $messageBody['link']];
+        if (!empty($messageBody['caption'])) $data["video"]["caption"] = $messageBody['caption'];
     } elseif ($type === 'audio') {
-        $data["audio"] = [
-            "link" => $messageBody['link']
-        ];
+        $data["audio"] = isset($messageBody['id']) ? ["id" => $messageBody['id']] : ["link" => $messageBody['link']];
+    } elseif ($type === 'document') {
+        $data["document"] = isset($messageBody['id']) ? ["id" => $messageBody['id']] : ["link" => $messageBody['link']];
+        if (!empty($messageBody['filename'])) $data["document"]["filename"] = $messageBody['filename'];
+        if (!empty($messageBody['caption'])) $data["document"]["caption"] = $messageBody['caption'];
     } else {
         $data["text"] = ["body" => $messageBody];
     }
@@ -104,6 +101,9 @@ function sendWhatsAppMessage($to, $messageBody, $type = 'text', $templateName = 
 
     // Log the API call
     try {
+        $logMsg = date('[Y-m-d H:i:s]') . " Sent: $type to $to. Payload: $jsonPayload. Response: $response\n";
+        file_put_contents(__DIR__ . '/../whatsapp_debug.log', $logMsg, FILE_APPEND);
+
         $stmt = $pdo->prepare("INSERT INTO whatsapp_logs (order_id, phone, type, api_response, status, error_message) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->execute([$orderId, $to, ($type === 'template' ? $templateName : $type), $response, $status, $errorMsg]);
     } catch (Exception $e) {
@@ -336,41 +336,160 @@ function trackOrderOnWhatsApp($orderId, $phone) {
     return $msg;
 }
 /**
- * Download Media from Meta
+ * Download Media from Meta WhatsApp API
+ * @param string $mediaId   - WhatsApp media ID
+ * @param string $subfolder - Subfolder under /uploads/whatsapp_media/ (voice, images, videos, documents, stickers)
+ * @param string $origName  - Optional original filename (for documents)
+ * @return string|false     - Public URL or false on failure
  */
-function downloadWhatsAppMedia($mediaId) {
+function downloadWhatsAppMedia($mediaId, $subfolder = 'misc', $origName = '') {
     if (!$mediaId) return false;
     $wa = getWhatsAppConfig();
-    
-    // 1. Get the URL for the media
+
+    // 1. Get the media metadata (URL + mime_type)
     $getUrl = "https://graph.facebook.com/" . $wa['version'] . "/" . $mediaId;
     $ch = curl_init($getUrl);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer " . $wa['token']]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $res = curl_exec($ch);
     curl_close($ch);
-    $data = json_decode($res, true);
-    
-    if (empty($data['url'])) return false;
-    $waUrl = $data['url'];
-    $ext = explode('/', $data['mime_type'])[1] ?? 'bin';
-    if ($ext === 'ogg; codecs=opus') $ext = 'ogg';
+    $meta = json_decode($res, true);
 
-    // 2. Download actual bytes
+    if (empty($meta['url'])) return false;
+
+    $waUrl   = $meta['url'];
+    $mime    = $meta['mime_type'] ?? 'application/octet-stream';
+    $extRaw  = explode('/', $mime)[1] ?? 'bin';
+    $ext     = preg_replace('/[^a-z0-9]/i', '', explode(';', $extRaw)[0]); // strip codecs part
+    if ($extRaw === 'ogg; codecs=opus') $ext = 'ogg';
+
+    // 2. Download the actual media bytes
     $ch = curl_init($waUrl);
     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer " . $wa['token'], "User-Agent: curl"]);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $bytes = curl_exec($ch);
     curl_close($ch);
 
     if (!$bytes) return false;
 
-    // 3. Save locally
-    $dir = __DIR__ . '/../uploads/whatsapp_media/';
+    // 3. Save to appropriate subfolder
+    $dir = __DIR__ . '/../uploads/whatsapp_media/' . $subfolder . '/';
     if (!is_dir($dir)) mkdir($dir, 0777, true);
-    $fileName = 'media_' . time() . '_' . $mediaId . '.' . $ext;
+
+    if ($origName) {
+        // Sanitize original filename
+        $safeOrig = preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $origName);
+        $fileName  = time() . '_' . $safeOrig;
+    } else {
+        $fileName = 'wamedia_' . time() . '_' . substr($mediaId, -8) . '.' . $ext;
+    }
+
     file_put_contents($dir . $fileName, $bytes);
 
-    return SITE_URL . '/uploads/whatsapp_media/' . $fileName;
+    return SITE_URL . '/uploads/whatsapp_media/' . $subfolder . '/' . $fileName;
+}
+
+/**
+ * Upload Media to Meta WhatsApp API
+ * @param string $filePath - Full path to the local file
+ * @param string $type - Media type (image, audio, video, document)
+ * @return string|false - Media ID or false on failure
+ */
+function uploadWhatsAppMedia($filePath, $type = 'audio') {
+    if (!file_exists($filePath)) return false;
+    $wa = getWhatsAppConfig();
+    $url = "https://graph.facebook.com/" . $wa['version'] . "/" . $wa['phone_id'] . "/media";
+
+    $mime = mime_content_type($filePath);
+    if (str_ends_with($filePath, '.ogg')) $mime = 'audio/ogg';
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer " . $wa['token']]);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    
+    $curlFile = new CURLFile($filePath, $mime, basename($filePath));
+    
+    curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        'file' => $curlFile,
+        'type' => $type,
+        'messaging_product' => 'whatsapp'
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    
+    $result = curl_exec($ch);
+    $info = curl_getinfo($ch);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+    
+    $res = json_decode($result, true);
+    
+    // Debug Logging
+    $dbgMsg = date('[Y-m-d H:i:s]') . " Media Upload ($type): $filePath. HTTP: {$info['http_code']}. Error: $curlError. Response: $result\n";
+    file_put_contents(__DIR__ . '/../whatsapp_debug.log', $dbgMsg, FILE_APPEND);
+
+    if ($info['http_code'] !== 200) {
+        error_log("WhatsApp Media Upload Error: " . ($res['error']['message'] ?? 'Unknown Error'));
+        return false;
+    }
+    
+    return $res['id'] ?? false;
+}
+
+/**
+ * Notify ADMIN of New Order
+ * Includes Order Amount, Items, and Customer Info
+ */
+function sendAdminOrderNotification($orderId) {
+    global $pdo;
+    
+    // Fetch order details
+    $stmt = $pdo->prepare("SELECT * FROM orders WHERE id = ?");
+    $stmt->execute([$orderId]);
+    $order = $stmt->fetch();
+    if (!$order) return false;
+
+    // Fetch order items
+    $stItems = $pdo->prepare("SELECT product_name, quantity, size, color FROM order_items WHERE order_id = ?");
+    $stItems->execute([$orderId]);
+    $items = $stItems->fetchAll();
+
+    $itemsStr = "";
+    foreach($items as $i) {
+        $itemsStr .= " ▪️ " . $i['product_name'] . " (x" . $i['quantity'] . ")";
+        if($i['size'] || $i['color']) {
+            $itemsStr .= " [";
+            if($i['size']) $itemsStr .= strtoupper($i['size']);
+            if($i['size'] && $i['color']) $itemsStr .= "/";
+            if($i['color']) $itemsStr .= $i['color'];
+            $itemsStr .= "]";
+        }
+        $itemsStr .= "\n";
+    }
+
+    $adminNumber = defined('ADMIN_PHONE') ? ADMIN_PHONE : null;
+    if (!$adminNumber) return false;
+
+    $msg = "🚀 *NEW ORDER RECEIVED!*\n\n" .
+           "💰 *Total Amount*: " . CURRENCY . number_format($order['total'], 2) . "\n" .
+           "📦 *Items*:\n" . $itemsStr . "\n" .
+           "👤 *Customer*: " . $order['name'] . "\n" .
+           "📞 *Phone*: " . $order['phone'] . "\n" .
+           "🏠 *Location*: " . $order['city'] . ", " . $order['state'] . "\n" .
+           "💳 *Payment*: " . strtoupper($order['payment_method']) . "\n\n" .
+           "🆔 Order ID: #" . $order['order_number'] . "\n" .
+           "🔗 Admin Link: " . SITE_URL . "/admin/order_detail.php?id=" . $orderId;
+
+    // Send with a nice store-themed image header
+    $logoUrl = "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&q=80"; 
+
+    $payload = [
+        "link" => $logoUrl,
+        "caption" => $msg
+    ];
+
+    return sendWhatsAppMessage($adminNumber, $payload, 'image', '', [], $orderId);
 }

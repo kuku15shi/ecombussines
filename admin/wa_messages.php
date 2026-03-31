@@ -83,26 +83,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_reply'])) {
     } catch (Exception $e) { $error = "Error: " . $e->getMessage(); }
 }
 
-// Handle Broadcast
+// Handle Broadcast with Image Support
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_broadcast'])) {
     try {
         validateCsrf();
         $message = $_POST['broadcast_message'] ?? '';
-        if($message) {
-            $stmt = $pdo->query("SELECT DISTINCT phone FROM orders WHERE phone IS NOT NULL AND phone != ''");
+        $target = $_POST['broadcast_target'] ?? 'customers'; // customers or all
+        $alsoSite = isset($_POST['also_site_notif']);
+        $mediaId = null;
+        $localImgPath = '';
+
+        // Upload media if present
+        if (!empty($_FILES['broadcast_image']['tmp_name'])) {
+            $tmpFile = $_FILES['broadcast_image']['tmp_name'];
+            $fileExt = pathinfo($_FILES['broadcast_image']['name'], PATHINFO_EXTENSION);
+            $localName = 'notif_' . time() . '.' . $fileExt;
+            $uploadDir = __DIR__ . '/../uploads/notifications/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+            
+            if (move_uploaded_file($tmpFile, $uploadDir . $localName)) {
+                $localImgPath = SITE_URL . '/uploads/notifications/' . $localName;
+                $mediaId = uploadWhatsAppMedia($uploadDir . $localName, 'image');
+            } else {
+                throw new Exception("Local file upload failed.");
+            }
+            if (!$mediaId) throw new Exception("Media upload to WhatsApp failed.");
+        }
+
+        if ($alsoSite) {
+            $notifTitle = $_POST['broadcast_title'] ?? 'New Offer! ⚡️';
+            $stmtSite = $pdo->prepare("INSERT INTO site_notifications (title, message, image_url, target_url) VALUES (?, ?, ?, ?)");
+            $stmtSite->execute([$notifTitle, $message, $localImgPath, SITE_URL . '/products.php']);
+        }
+
+        if ($message || $mediaId) {
+            // Get recipients
+            if ($target === 'all') {
+                $stmt = $pdo->query("SELECT DISTINCT phone FROM users WHERE phone IS NOT NULL AND phone != ''");
+            } else {
+                $stmt = $pdo->query("SELECT DISTINCT phone FROM orders WHERE phone IS NOT NULL AND phone != ''");
+            }
             $customers = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            
             $count = 0;
-            foreach($customers as $phone) {
-                $res = sendWhatsAppMessage($phone, $message, 'text');
-                if($res['status'] === 'success') {
+            $failCount = 0;
+            
+            foreach ($customers as $phone) {
+                // If it's a 10 digit number, prepend 91 (default to India)
+                $toPhone = preg_replace('/[^0-9]/', '', $phone);
+                if (strlen($toPhone) === 10) $toPhone = '91' . $toPhone;
+
+                if ($mediaId) {
+                    $payload = ["id" => $mediaId, "caption" => $message];
+                    $res = sendWhatsAppMessage($toPhone, $payload, 'image');
+                } else {
+                    $res = sendWhatsAppMessage($toPhone, $message, 'text');
+                }
+
+                if ($res['status'] === 'success') {
+                    $logMsg = $mediaId ? "[BROADCAST IMAGE] " . $message : "[BROADCAST] " . $message;
                     $pdo->prepare("INSERT INTO whatsapp_messages (phone, message, direction, status) VALUES (?, ?, 'outgoing', 'sent')")
-                        ->execute([$phone, $message]);
+                        ->execute([$toPhone, $logMsg]);
                     $count++;
+                } else {
+                    $failCount++;
                 }
             }
-            $successMsg = "Broadcast sent successfully to $count customers!";
+            $successMsg = "Broadcast completed! Sent to $count recipients. " . ($failCount > 0 ? "Failed: $failCount." : "");
         }
-    } catch (Exception $e) { $error = "Error: " . $e->getMessage(); }
+    } catch (Exception $e) { 
+        $error = "Broadcast Error: " . $e->getMessage(); 
+    }
 }
 
 $activeTab = $_GET['tab'] ?? 'chat';
@@ -338,23 +389,44 @@ try {
                     <div class="chat-body" id="chatWindow">
                         <?php foreach($messages as $m): ?>
                         <div class="msg <?= $m['direction'] ?>">
-                            <?php 
+                            <?php
                             $msgText = $m['message'];
-                            if (strpos($msgText, '[AUDIO]:') === 0) {
-                                $audioUrl = substr($msgText, 8);
-                                echo '<div class="audio-msg" style="display:flex; flex-direction:column; gap:5px;">';
-                                echo '<audio controls style="max-width:220px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
-                                echo '<a href="'.$audioUrl.'" target="_blank" style="font-size:0.65rem; color:inherit; opacity:0.7; text-decoration:underline;">Download Voice Message</a>';
+                            if (preg_match('/^\[AUDIO\]:(.+)$/s', $msgText, $mt)) {
+                                $audioUrl = $mt[1];
+                                echo '<div style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:0.75rem;opacity:0.7;">🎙 Voice Message</span>';
+                                echo '<audio controls style="max-width:220px;height:40px;"><source src="'.htmlspecialchars($audioUrl).'"></audio>';
+                                echo '<a href="'.htmlspecialchars($audioUrl).'" download style="font-size:0.65rem;opacity:0.7;text-decoration:underline;">Download</a></div>';
+                            } elseif (preg_match('/^\[Voice Message\]:(.+)$/s', $msgText, $mt)) {
+                                $audioUrl = $mt[1];
+                                echo '<div style="display:flex;flex-direction:column;gap:5px;"><span style="font-size:0.75rem;opacity:0.7;">🎙 Voice Message</span>';
+                                echo '<audio controls style="max-width:220px;height:40px;"><source src="'.htmlspecialchars($audioUrl).'"></audio>';
+                                echo '<a href="'.htmlspecialchars($audioUrl).'" download style="font-size:0.65rem;opacity:0.7;text-decoration:underline;">Download</a></div>';
+                            } elseif (preg_match('/^\[IMAGE\]:([^|]+)(?:\|CAPTION:(.*))?$/s', $msgText, $mt)) {
+                                $imgUrl = $mt[1]; $cap = $mt[2] ?? '';
+                                echo '<div style="display:flex;flex-direction:column;gap:4px;">';
+                                echo '<a href="'.htmlspecialchars($imgUrl).'" target="_blank"><img src="'.htmlspecialchars($imgUrl).'" style="max-width:220px;border-radius:8px;display:block;"></a>';
+                                if ($cap) echo '<span style="font-size:0.8rem;">'.htmlspecialchars($cap).'</span>';
                                 echo '</div>';
-                            } elseif (strpos($msgText, '[Voice Message]:') === 0) {
-                                $audioUrl = substr($msgText, 16);
-                                echo '<div class="audio-msg" style="display:flex; flex-direction:column; gap:5px;">';
-                                echo '<audio controls style="max-width:220px; height:40px;"><source src="'.$audioUrl.'" type="audio/ogg"></audio>';
-                                echo '<a href="'.$audioUrl.'" target="_blank" style="font-size:0.65rem; color:inherit; opacity:0.7; text-decoration:underline;">Download Voice Message</a>';
+                            } elseif (preg_match('/^\[VIDEO\]:([^|]+)(?:\|CAPTION:(.*))?$/s', $msgText, $mt)) {
+                                $vidUrl = $mt[1]; $cap = $mt[2] ?? '';
+                                echo '<div style="display:flex;flex-direction:column;gap:4px;">';
+                                echo '<video controls style="max-width:220px;border-radius:8px;"><source src="'.htmlspecialchars($vidUrl).'"></video>';
+                                if ($cap) echo '<span style="font-size:0.8rem;">'.htmlspecialchars($cap).'</span>';
                                 echo '</div>';
-                            } elseif (strpos($msgText, '[IMAGE]:') === 0) {
-                                $imgUrl = substr($msgText, 8);
-                                echo '<a href="'.$imgUrl.'" target="_blank"><img src="'.$imgUrl.'" style="max-width:100%; border-radius:8px;"></a>';
+                            } elseif (preg_match('/^\[DOCUMENT\]:([^|]+)\|FILENAME:(.+)$/s', $msgText, $mt)) {
+                                $docUrl = $mt[1]; $fname = $mt[2];
+                                echo '<div style="display:flex;align-items:center;gap:0.6rem;background:rgba(0,0,0,0.08);padding:0.6rem 0.8rem;border-radius:8px;">';
+                                echo '<i class="bi bi-file-earmark-pdf" style="font-size:1.8rem;"></i>';
+                                echo '<div><div style="font-size:0.8rem;font-weight:700;">'.htmlspecialchars($fname).'</div>';
+                                echo '<a href="'.htmlspecialchars($docUrl).'" download style="font-size:0.7rem;text-decoration:underline;">Download</a></div></div>';
+                            } elseif (preg_match('/^\[STICKER\]:(.+)$/s', $msgText, $mt)) {
+                                echo '<img src="'.htmlspecialchars($mt[1]).'" style="max-width:150px;">';
+                            } elseif (preg_match('/^\[LOCATION\]:lat=([^|]+)\|lng=([^|]+)\|name=([^|]*)\|addr=(.*)$/s', $msgText, $mt)) {
+                                $lat=$mt[1]; $lng=$mt[2]; $lname=$mt[3]; $laddr=$mt[4];
+                                echo '<div style="display:flex;flex-direction:column;gap:4px;">';
+                                echo '<span>📍 <b>'.htmlspecialchars($lname ?: 'Location').'</b></span>';
+                                if ($laddr) echo '<span style="font-size:0.75rem;">'.htmlspecialchars($laddr).'</span>';
+                                echo '<a href="https://maps.google.com/?q='.$lat.','.$lng.'" target="_blank" style="font-size:0.75rem;text-decoration:underline;">Open in Maps</a></div>';
                             } else {
                                 echo nl2br(htmlspecialchars($msgText));
                             }
@@ -365,7 +437,12 @@ try {
                     </div>
                     <div class="chat-footer">
                         <div class="quick-replies">
-                            <button class="qr-btn" onclick="toggleMacroModal()">+ Add Macro</button>
+                            <button class="qr-btn" onclick="toggleMacroModal()">+ Macro</button>
+                            <button class="qr-btn" onclick="openMediaModal('image')">🖼 Image</button>
+                            <button class="qr-btn" onclick="openMediaModal('video')">🎬 Video</button>
+                            <button class="qr-btn" onclick="openMediaModal('document')">📄 Document</button>
+                            <button class="qr-btn" onclick="openMediaModal('audio')">🎙 Voice File</button>
+                            <button class="qr-btn" onclick="openMediaModal('product_link')">🔗 Product Link</button>
                             <?php foreach($macros as $mac): ?>
                             <button class="qr-btn" onclick="applyMacro('<?= addslashes($mac['content']) ?>')"><?= htmlspecialchars($mac['title']) ?></button>
                             <?php endforeach; ?>
@@ -375,12 +452,11 @@ try {
                             <input type="hidden" name="phone" value="<?= $activePhone ?>">
                             <input type="hidden" name="send_reply" value="1">
                             <div class="reply-box">
-                                <button type="button" class="btn-mic" id="startVoiceBtn" onclick="startVoiceRecording()"><i class="bi bi-mic-fill"></i></button>
+                                <button type="button" class="btn-mic" id="startVoiceBtn" onclick="startVoiceRecording()" title="Record voice"><i class="bi bi-mic-fill"></i></button>
                                 <textarea name="message" id="messageInput" placeholder="Type your message..." required></textarea>
                                 <button type="submit" class="btn-primary" style="padding: 0.8rem;"><i class="bi bi-send-fill"></i></button>
                             </div>
                         </form>
-                        
                         <!-- Voice Recording UI -->
                         <div class="voice-rec-overlay" id="voiceOverlay">
                             <div class="recording-indicator">
@@ -508,18 +584,69 @@ try {
             </div>
 
             <?php elseif($activeTab === 'broadcast'): ?>
-            <!-- Same as before but with better layout -->
-            <div class="form-card" style="max-width: 700px; margin: 0 auto;">
-                <h2 style="margin-bottom:1rem;">Marketing Broadcast</h2>
-                <p class="text-muted" style="margin-bottom:2rem;">Send a direct WhatsApp message to all customers in your database.</p>
-                <form method="POST">
-                    <?= csrfField() ?>
-                    <div class="form-group">
-                        <label class="form-label">Message Content</label>
-                        <textarea name="broadcast_message" class="form-control" style="min-height:150px;" placeholder="Write your offer here..."></textarea>
+            <div class="form-card" style="max-width: 800px; margin: 0 auto; padding: 2.5rem;">
+                <div style="text-align:center; margin-bottom:2.5rem;">
+                    <div style="width:70px; height:70px; border-radius:50%; background:rgba(108,99,255,0.1); display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem;">
+                        <i class="bi bi-megaphone" style="font-size:2.2rem; color:var(--primary);"></i>
                     </div>
-                    <button type="submit" name="send_broadcast" class="btn-primary" style="width:100%; justify-content:center; padding:1rem;">
-                        <i class="bi bi-megaphone"></i> Send to All Customers
+                    <h2 style="font-weight:800; font-size:1.8rem; margin-bottom:0.5rem;">Marketing Broadcast</h2>
+                    <p class="text-muted" style="max-width:500px; margin:0 auto;">Send direct WhatsApp promotions or announcements to your audience.</p>
+                </div>
+
+                <div class="alert alert-info" style="margin-bottom:2rem; background:rgba(108,99,255,0.05); border:1px solid rgba(108,99,255,0.1); color:var(--text-primary);">
+                    <div style="font-weight:700; margin-bottom:0.5rem;"><i class="bi bi-info-circle-fill"></i> Marketing Tips:</div>
+                    <ul style="font-size:0.85rem; padding-left:1.25rem; margin:0;">
+                        <li>Use an eye-catching **Offer Banner** (image) for better conversion.</li>
+                        <li>Meta limits broadcast speed and volume based on your account quality.</li>
+                        <li>Avoid spam; customers may report unsolicited messages.</li>
+                    </ul>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="send_broadcast" value="1">
+                    
+                    <div class="grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Broadcast Target</label>
+                            <select name="broadcast_target" class="form-control" style="background:var(--bg-lighter);">
+                                <option value="customers">Customers (Only those who ordered)</option>
+                                <option value="all">All Registered Users (Full database)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Offer Banner (Image)</label>
+                            <input type="file" name="broadcast_image" class="form-control" accept="image/*">
+                            <small class="text-muted" style="font-size:0.7rem;">Recommended: 1200x628px (Landscape)</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:1.5rem;">
+                        <label class="form-label">Broadcast/Notification Title</label>
+                        <input type="text" name="broadcast_title" class="form-control" placeholder="e.g. Flash Sale Live! ⚡️" value="New Offer! ⚡️">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:2.5rem;">
+                        <label class="form-label" style="display:flex; justify-content:space-between;">
+                            <span>Broadcast Content (Caption)</span>
+                            <span style="font-weight:normal; font-size:0.75rem; color:var(--text-muted);">Max Recommended: 1000 chars</span>
+                        </label>
+                        <textarea name="broadcast_message" class="form-control" style="min-height:220px; padding:1.25rem; font-size:1rem; line-height:1.6;" placeholder="Hey there! ⚡️ Big Sale is LIVE! Use coupon: LUXE50 ..."></textarea>
+                    </div>
+
+                    <div style="background:var(--bg-lighter); padding:1.5rem; border-radius:var(--radius-sm); margin-bottom:2.5rem; display:flex; flex-direction:column; gap:1rem;">
+                        <div class="form-check" style="display:flex; gap:0.75rem; align-items:flex-start;">
+                            <input type="checkbox" name="also_site_notif" id="siteNotifCheck" checked style="margin-top:0.3rem;">
+                            <label for="siteNotifCheck" style="font-size:0.9rem; font-weight:700; cursor:pointer;">Also show as pop-up notification on Website 🌐</label>
+                        </div>
+                        <div class="form-check" style="display:flex; gap:0.75rem; align-items:flex-start;">
+                            <input type="checkbox" id="broadcastConfirm" required style="margin-top:0.3rem;">
+                            <label for="broadcastConfirm" style="font-size:0.85rem; cursor:pointer;">I understand that sending spam may lead to my WhatsApp number being blocked by Meta. I will only send relevant offers to my users.</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding:1.25rem; font-size:1.1rem; border-radius:var(--radius); box-shadow:0 10px 30px rgba(108,99,255,0.25);">
+                        <i class="bi bi-send-check-fill"></i> Launch Broadcast Campaign
                     </button>
                 </form>
             </div>
@@ -584,6 +711,23 @@ try {
     </div>
 </div>
 
+<!-- Media Send Modal -->
+<div id="mediaModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:480px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+            <h3 id="mediaModalTitle">Send Media</h3>
+            <button class="btn-icon" onclick="closeMediaModal()"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="mediaModalBody">
+            <!-- Injected by JS -->
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.5rem;">
+            <button type="button" class="btn-icon" onclick="closeMediaModal()">Cancel</button>
+            <button type="button" class="btn-primary" id="mediaModalSendBtn" onclick="sendMedia()"><i class="bi bi-send-fill"></i> Send</button>
+        </div>
+    </div>
+</div>
+
 <!-- Macro Modal -->
 <div id="macroModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
@@ -608,6 +752,119 @@ try {
 </div>
 
 <script>
+    // ── Media Modal ──────────────────────────────────────────────────
+    let currentMediaType = '';
+    const ACTIVE_PHONE = '<?= addslashes($activePhone) ?>';
+
+    const mediaConfigs = {
+        image: {
+            title: '🖼 Send Image',
+            accept: 'image/jpeg,image/png,image/gif,image/webp',
+            label: 'Choose Image (JPG, PNG, GIF, WebP – max 16 MB)',
+            hasCaption: true
+        },
+        video: {
+            title: '🎬 Send Video',
+            accept: 'video/mp4,video/3gp',
+            label: 'Choose Video (MP4, 3GP – max 16 MB)',
+            hasCaption: true
+        },
+        document: {
+            title: '📄 Send Document',
+            accept: '.pdf,.doc,.docx,.xls,.xlsx,.txt',
+            label: 'Choose Document (PDF, Word, Excel – max 16 MB)',
+            hasCaption: false
+        },
+        audio: {
+            title: '🎙 Send Audio File',
+            accept: 'audio/mpeg,audio/ogg,audio/wav',
+            label: 'Choose Audio File (MP3, OGG, WAV – max 16 MB)',
+            hasCaption: false
+        },
+        product_link: {
+            title: '🔗 Send Product Link',
+            accept: '',
+            label: '',
+            hasCaption: false
+        }
+    };
+
+    function openMediaModal(type) {
+        currentMediaType = type;
+        const cfg = mediaConfigs[type];
+        document.getElementById('mediaModalTitle').textContent = cfg.title;
+        let html = '';
+        if (type === 'product_link') {
+            html = `<div class="form-group">
+                <label class="form-label">Product URL</label>
+                <input type="url" id="productLinkUrl" class="form-control" placeholder="https://yoursite.com/product.php?id=5" required>
+            </div>
+            <div class="form-group" style="margin-top:1rem;">
+                <label class="form-label">Message Caption (optional)</label>
+                <textarea id="productLinkMsg" class="form-control" rows="3" placeholder="Check out this product! ...\nhttps://yoursite.com/product.php?id=5"></textarea>
+            </div>`;
+        } else {
+            html = `<div class="form-group">
+                <label class="form-label">${cfg.label}</label>
+                <input type="file" id="mediaFile" class="form-control" accept="${cfg.accept}" required>
+            </div>`;
+            if (cfg.hasCaption) {
+                html += `<div class="form-group" style="margin-top:1rem;">
+                    <label class="form-label">Caption (optional)</label>
+                    <input type="text" id="mediaCaption" class="form-control" placeholder="Enter caption...">
+                </div>`;
+            }
+        }
+        document.getElementById('mediaModalBody').innerHTML = html;
+        document.getElementById('mediaModal').style.display = 'flex';
+    }
+
+    function closeMediaModal() {
+        document.getElementById('mediaModal').style.display = 'none';
+        currentMediaType = '';
+    }
+
+    async function sendMedia() {
+        if (!ACTIVE_PHONE) { alert('No active chat selected'); return; }
+        const btn = document.getElementById('mediaModalSendBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+
+        const fd = new FormData();
+        fd.append('phone', ACTIVE_PHONE);
+        fd.append('type', currentMediaType);
+
+        if (currentMediaType === 'product_link') {
+            const url = document.getElementById('productLinkUrl')?.value.trim();
+            const msg = document.getElementById('productLinkMsg')?.value.trim() || url;
+            if (!url) { alert('Please enter a product URL'); btn.disabled=false; btn.innerHTML='<i class="bi bi-send-fill"></i> Send'; return; }
+            fd.append('product_link', url);
+            fd.append('product_msg', msg);
+        } else {
+            const fileInp = document.getElementById('mediaFile');
+            if (!fileInp || !fileInp.files[0]) { alert('Please select a file'); btn.disabled=false; btn.innerHTML='<i class="bi bi-send-fill"></i> Send'; return; }
+            fd.append('media', fileInp.files[0]);
+            const cap = document.getElementById('mediaCaption')?.value || '';
+            if (cap) fd.append('caption', cap);
+        }
+
+        try {
+            const resp = await fetch('ajax/upload_media.php', { method: 'POST', body: fd });
+            const data = await resp.json();
+            if (data.success) {
+                closeMediaModal();
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch(e) {
+            alert('Network error. Please try again.');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> Send';
+    }
+
+    // ── Macro Modal ──────────────────────────────────────────────────
     function toggleMacroModal() {
         const m = document.getElementById('macroModal');
         m.style.display = m.style.display === 'none' ? 'flex' : 'none';

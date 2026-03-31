@@ -139,11 +139,15 @@ body::before {
 
 .nav-link {
   color: var(--text-secondary) !important;
-  font-weight: 500;
-  padding: 0.4rem 0.8rem !important;
-  border-radius: var(--radius-sm);
+  font-weight: 600;
+  padding: 0.5rem 1rem !important;
+  border-radius: 50px;
   transition: var(--transition);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  text-decoration: none !important;
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
 }
 
 .nav-link:hover {
@@ -822,6 +826,33 @@ body::before {
   color: var(--primary);
 }
 
+.btn-buy-now {
+  background: linear-gradient(135deg, #FF3D68, #FF8E3C);
+  color: #fff !important;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-family: var(--font);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 15px rgba(255, 61, 104, 0.3);
+}
+
+.btn-buy-now:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(255, 61, 104, 0.5);
+  filter: brightness(1.1);
+}
+
 /* ===== CATEGORY CARD ===== */
 .category-card {
   background: var(--glass);
@@ -1080,7 +1111,7 @@ body::before {
   position: fixed;
   bottom: 1.5rem;
   right: 1.5rem;
-  z-index: 9999;
+  z-index: 9000;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -1160,7 +1191,7 @@ body::before {
   transition: var(--transition);
   opacity: 0;
   transform: translateY(20px);
-  z-index: 9980;
+  z-index: 1100;
   border: none;
   box-shadow: 0 8px 30px rgba(108, 99, 255, 0.4);
 }
@@ -1528,7 +1559,6 @@ select.form-control option {
 /* ===== PAGE WRAPPER ===== */
 .page-wrapper {
   position: relative;
-  z-index: 1;
   min-height: calc(100vh - 72px);
   padding: 2rem 0;
 }
@@ -1806,14 +1836,14 @@ select.form-control option {
   }
 
   .back-to-top {
-    bottom: 6rem;
-    right: 1.5rem;
-    /* Move up to clear mobile bottom nav and stay on right */
+    bottom: 7.25rem;
+    right: 1.25rem;
+    z-index: 1100;
   }
 
   .footer {
-    padding-bottom: 90px !important;
-    /* Ensure footer content is visible above bottom nav */
+    padding-bottom: 120px !important;
+    /* Ensure footer content is perfectly clear of bottom nav */
   }
 
   .page-wrapper {
@@ -2036,7 +2066,6 @@ select.form-control option {
   padding: 4rem 0 2rem;
   margin-top: 4rem;
   position: relative;
-  z-index: 1;
 }
 
 [data-theme="light"] .footer {
@@ -2568,7 +2597,7 @@ select.form-control option {
     left: auto;
     width: min(300px, 85vw);
     height: 100dvh;
-    z-index: 2000;
+    z-index: 5001;
     transform: translateX(100%);
     transition: transform 0.4s cubic-bezier(0.7, 0, 0.3, 1);
     background: var(--bg-dark);
@@ -3215,7 +3244,7 @@ select.form-control option {
   -webkit-backdrop-filter: blur(32px);
   border-top: 1px solid var(--glass-border);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  z-index: 2001;
+  z-index: 5001;
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
   padding: 1rem 1.5rem 3rem;
@@ -3480,10 +3509,10 @@ select.form-control option {
 /* Floating WhatsApp Button */
 .fab-whatsapp {
   position: fixed;
-  bottom: 85px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
+  bottom: 66px;
+  right: 15px;
+  width: 50px;
+  height: 50px;
   background: #25D366;
   color: #fff !important;
   border-radius: 50%;
@@ -3492,7 +3521,7 @@ select.form-control option {
   justify-content: center;
   font-size: 2.2rem;
   box-shadow: 0 10px 30px rgba(37, 211, 102, 0.5);
-  z-index: 4999;
+  z-index: 1100;
   text-decoration: none;
   transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }

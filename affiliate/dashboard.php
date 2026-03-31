@@ -166,7 +166,7 @@ $referralLink = SITE_URL . "/index.php?ref=" . $affCode;
                     <div class="text-secondary x-small fw-800 text-uppercase mb-3" style="letter-spacing: 1px;">Quick Share</div>
                     <div class="d-flex gap-3">
                         <a href="https://wa.me/?text=Check this out: <?= $referralLink ?>" target="_blank" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #25D366;"><i class="bi bi-whatsapp fs-5"></i></a>
-                        <a href="https://twitter.com/intent/tweet?url=<?= $referralLink ?>&text=Shop at LuxeStore!" target="_blank" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #1DA1F2;"><i class="bi bi-twitter-x fs-5"></i></a>
+                        <a href="https://twitter.com/intent/tweet?url=<?= $referralLink ?>&text=Shop at MIZ MAX!" target="_blank" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #1DA1F2;"><i class="bi bi-twitter-x fs-5"></i></a>
                         <a href="#" class="btn btn-light flex-grow-1 py-2 rounded-3 border" style="color: #1877F2;"><i class="bi bi-facebook fs-5"></i></a>
                     </div>
                 </div>

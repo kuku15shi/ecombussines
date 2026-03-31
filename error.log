@@ -1,0 +1,18 @@
+[29-Mar-2026 10:48:59 Europe/Berlin] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 2006 MySQL server has gone away in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php:4
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php(4): PDO->query('SELECT * FROM c...')
+#1 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\index.php(6): getCategories(Object(PDO))
+#2 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\config\functions.php on line 4
+[30-Mar-2026 13:58:44 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\delivery_addresses.php on line 90
+[30-Mar-2026 13:58:44 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\delivery_addresses.php on line 97
+[30-Mar-2026 13:58:44 Europe/Berlin] PHP Deprecated:  htmlspecialchars(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\delivery_addresses.php on line 97
+[30-Mar-2026 13:58:44 Europe/Berlin] PHP Warning:  Undefined variable $search in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\delivery_addresses.php on line 99
+[30-Mar-2026 13:58:44 Europe/Berlin] PHP Warning:  Undefined variable $addresses in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\delivery_addresses.php on line 119
+[30-Mar-2026 13:58:44 Europe/Berlin] PHP Warning:  foreach() argument must be of type array|object, null given in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\admin\delivery_addresses.php on line 119
+[30-Mar-2026 17:50:49 Europe/Berlin] PHP Warning:  Undefined variable $likedVideos in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\videos.php on line 599
+[30-Mar-2026 17:50:49 Europe/Berlin] PHP Fatal error:  Uncaught TypeError: in_array(): Argument #2 ($haystack) must be of type array, null given in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\videos.php:599
+Stack trace:
+#0 C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\videos.php(599): in_array(1, NULL)
+#1 {main}
+  thrown in C:\Users\VICTUS\Desktop\my pproject\xamp\htdocs\ecombusiness\videos.php on line 599

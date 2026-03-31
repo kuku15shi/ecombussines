@@ -20,11 +20,11 @@ $potentialProfit = $pdo->query("SELECT SUM((price * (1 - COALESCE(discount_perce
 
 // Monthly Revenue (last 6 months)
 $monthlyData = [];
-for($i = 5; $i >= 0; $i--) {
-    $m = date('Y-m', strtotime("-$i months"));
-    $res = $pdo->prepare("SELECT COALESCE(SUM(total),0) as v FROM orders WHERE DATE_FORMAT(created_at,'%Y-%m')=? AND order_status!='cancelled'");
-    $res->execute([$m]);
-    $monthlyData[] = ['month'=>date('M', strtotime("-$i months")), 'revenue'=>round($res->fetch()['v'])];
+for ($i = 5; $i >= 0; $i--) {
+  $m = date('Y-m', strtotime("-$i months"));
+  $res = $pdo->prepare("SELECT COALESCE(SUM(total),0) as v FROM orders WHERE DATE_FORMAT(created_at,'%Y-%m')=? AND order_status!='cancelled'");
+  $res->execute([$m]);
+  $monthlyData[] = ['month' => date('M', strtotime("-$i months")), 'revenue' => round($res->fetch()['v'])];
 }
 
 // Recent Orders
@@ -35,11 +35,13 @@ $lowStock = $pdo->query("SELECT * FROM products WHERE stock <= 5 AND is_active=1
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= $pageTitle ?> – LuxeStore Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <title><?= $pageTitle ?> – MIZ MAX Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
   <link href="css/admin.css" rel="stylesheet">
   <script>
@@ -48,197 +50,236 @@ $lowStock = $pdo->query("SELECT * FROM products WHERE stock <= 5 AND is_active=1
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
-<div class="admin-layout">
-  <?php include 'includes/sidebar.php'; ?>
-  <div class="main-content">
-    <?php include 'includes/topbar.php'; ?>
-    <div class="content-area">
+  <div class="admin-layout">
+    <?php include 'includes/sidebar.php'; ?>
+    <div class="main-content">
+      <?php include 'includes/topbar.php'; ?>
+      <div class="content-area">
 
-      <!-- Welcome -->
-      <div class="welcome-banner" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(255,101,132,0.06)); border:1px solid var(--border); border-radius:var(--radius); padding:1.75rem; margin-bottom:2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; box-shadow: var(--shadow-sm);">
-        <div>
-          <h1 style="font-size:1.5rem; font-weight:900; margin-bottom:0.4rem; background: linear-gradient(135deg, var(--primary), #FA709A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Good <?= (date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening')) ?>, <?= htmlspecialchars($_SESSION['admin_name']) ?>! 👋</h1>
-          <div style="color:var(--text-muted); font-size:0.85rem; letter-spacing: 0.5px;" class="d-md-inline"><?= date('l, d F Y') ?> · LuxeStore Control Center</div>
-        </div>
-        <div class="btn-group" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-          <a href="products.php?action=add" class="btn-primary" style="justify-content:center;"><i class="bi bi-plus-lg"></i> New Product</a>
-          <a href="orders.php" class="btn-primary" style="background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-primary); justify-content:center;"><i class="bi bi-bag-check"></i> Orders</a>
-        </div>
-      </div>
-
-      <!-- Stat Cards -->
-      <div class="stat-grid">
-        <?php
-        $stats = [
-          ['icon'=>'bi-currency-rupee','label'=>'Total Revenue','value'=>'₹'.number_format($totalRevenue),'change'=>'+12.5%','up'=>true,'color'=>'linear-gradient(135deg,var(--primary),var(--primary-dark))'],
-          ['icon'=>'bi-graph-up-arrow','label'=>'Total Profit','value'=>'₹'.number_format($totalProfit),'change'=>'Delivered orders','up'=>null,'color'=>'linear-gradient(135deg,#10B981,#059669)'],
-          ['icon'=>'bi-bag-check','label'=>'Total Orders','value'=>$totalOrders,'change'=>'+8.2%','up'=>true,'color'=>'linear-gradient(135deg,var(--accent),#38BDF8)'],
-          ['icon'=>'bi-box-seam','label'=>'Products','value'=>$totalProducts,'change'=>'Potential: ₹'.number_format($potentialProfit),'up'=>null,'color'=>'linear-gradient(135deg,var(--gold),#F97316)'],
-        ];
-        foreach($stats as $s):
-        ?>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:<?= $s['color'] ?>;">
-            <i class="bi <?= $s['icon'] ?>" style="color:#fff;"></i>
+        <!-- Welcome -->
+        <div class="welcome-banner"
+          style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(255,101,132,0.06)); border:1px solid var(--border); border-radius:var(--radius); padding:1.75rem; margin-bottom:2rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; box-shadow: var(--shadow-sm);">
+          <div>
+            <h1
+              style="font-size:1.5rem; font-weight:900; margin-bottom:0.4rem; background: linear-gradient(135deg, var(--primary), #FA709A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+              Good <?= (date('H') < 12 ? 'Morning' : (date('H') < 17 ? 'Afternoon' : 'Evening')) ?>,
+              <?= htmlspecialchars($_SESSION['admin_name']) ?>! 👋</h1>
+            <div style="color:var(--text-muted); font-size:0.85rem; letter-spacing: 0.5px;" class="d-md-inline">
+              <?= date('l, d F Y') ?> · MIZ MAX Control Center</div>
           </div>
-          <div class="stat-num"><?= $s['value'] ?></div>
-          <div class="stat-label"><?= $s['label'] ?></div>
-          <?php if($s['up'] !== null): ?>
-          <div class="stat-change <?= $s['up']?'up':'down' ?>">
-            <i class="bi bi-arrow-<?= $s['up']?'up':'down' ?>-right"></i> <?= $s['change'] ?> <span class="stat-time-label">this month</span>
-          </div>
-          <?php else: ?>
-          <div style="font-size:0.72rem; color:var(--text-muted);"><span class="stat-time-label"><?= $s['change'] ?></span></div>
-          <?php endif; ?>
-        </div>
-        <?php endforeach; ?>
-      </div>
-
-      <!-- Charts + Quick Info -->
-      <div class="admin-grid-2" style="margin-bottom:1.5rem;">
-        <!-- Revenue Chart -->
-        <div class="data-table-card">
-          <div class="data-table-header">
-            <div class="data-table-title">📊 Monthly Revenue</div>
-            <div style="font-size:0.8rem; color:var(--text-muted);">Last 6 months</div>
-          </div>
-          <div style="padding:1.5rem;">
-            <div class="chart-container" style="height:260px;">
-              <canvas id="revenueChart"></canvas>
-            </div>
+          <div class="btn-group" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <a href="products.php?action=add" class="btn-primary" style="justify-content:center;"><i
+                class="bi bi-plus-lg"></i> New Product</a>
+            <a href="orders.php" class="btn-primary"
+              style="background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-primary); justify-content:center;"><i
+                class="bi bi-bag-check"></i> Orders</a>
           </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="data-table-card">
-          <div class="data-table-header"><div class="data-table-title">⚡ Quick Insights</div></div>
-          <div style="padding:1.5rem;">
-            <?php
-            $qstats = [
-              ['Pending Orders', $pendingOrders, 'badge-pending', 'bi-clock-history', 'var(--warning)'],
-              ['Pending Withdrawals', $pdo->query("SELECT COUNT(*) as c FROM affiliate_withdrawals WHERE status='pending'")->fetch()['c'], 'badge-warning', 'bi-cash-stack', 'var(--gold)'],
-              ['Processing', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='processing'")->fetch()['c'], 'badge-processing', 'bi-gear-wide-connected', 'var(--info)'],
-              ['In Transit', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='shipped'")->fetch()['c'], 'badge-shipped', 'bi-truck', 'var(--primary)'],
-              ['Low Stock', count($lowStock), 'badge-cancelled', 'bi-exclamation-triangle', 'var(--danger)'],
-            ];
-            foreach($qstats as $qs):
+        <!-- Stat Cards -->
+        <div class="stat-grid">
+          <?php
+          $stats = [
+            ['icon' => 'bi-currency-rupee', 'label' => 'Total Revenue', 'value' => '₹' . number_format($totalRevenue), 'change' => '+12.5%', 'up' => true, 'color' => 'linear-gradient(135deg,var(--primary),var(--primary-dark))'],
+            ['icon' => 'bi-graph-up-arrow', 'label' => 'Total Profit', 'value' => '₹' . number_format($totalProfit), 'change' => 'Delivered orders', 'up' => null, 'color' => 'linear-gradient(135deg,#10B981,#059669)'],
+            ['icon' => 'bi-bag-check', 'label' => 'Total Orders', 'value' => $totalOrders, 'change' => '+8.2%', 'up' => true, 'color' => 'linear-gradient(135deg,var(--accent),#38BDF8)'],
+            ['icon' => 'bi-box-seam', 'label' => 'Products', 'value' => $totalProducts, 'change' => 'Potential: ₹' . number_format($potentialProfit), 'up' => null, 'color' => 'linear-gradient(135deg,var(--gold),#F97316)'],
+          ];
+          foreach ($stats as $s):
             ?>
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 0; border-bottom:1px solid var(--border);">
-              <div style="display:flex; align-items:center; gap:0.75rem; font-size:0.875rem; font-weight: 500;">
-                <div style="width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center;">
-                  <i class="bi <?= $qs[3] ?>" style="color:<?= $qs[4] ?>;"></i>
-                </div>
-                <?= $qs[0] ?>
+            <div class="stat-card">
+              <div class="stat-icon" style="background:<?= $s['color'] ?>;">
+                <i class="bi <?= $s['icon'] ?>" style="color:#fff;"></i>
               </div>
-              <span class="badge <?= $qs[2] ?>"><?= $qs[1] ?></span>
+              <div class="stat-num"><?= $s['value'] ?></div>
+              <div class="stat-label"><?= $s['label'] ?></div>
+              <?php if ($s['up'] !== null): ?>
+                <div class="stat-change <?= $s['up'] ? 'up' : 'down' ?>">
+                  <i class="bi bi-arrow-<?= $s['up'] ? 'up' : 'down' ?>-right"></i> <?= $s['change'] ?> <span
+                    class="stat-time-label">this month</span>
+                </div>
+              <?php else: ?>
+                <div style="font-size:0.72rem; color:var(--text-muted);"><span
+                    class="stat-time-label"><?= $s['change'] ?></span></div>
+              <?php endif; ?>
             </div>
-            <?php endforeach; ?>
-          </div>
+          <?php endforeach; ?>
         </div>
-      </div>
 
-      <!-- Recent Orders + Low Stock -->
-      <div class="admin-grid-2">
-        <!-- Recent Orders -->
-        <div class="data-table-card">
-          <div class="data-table-header">
-            <div class="data-table-title">🛒 Recent Orders</div>
-            <a href="orders.php" class="btn-primary btn-sm"><i class="bi bi-arrow-right"></i> View All</a>
+        <!-- Charts + Quick Info -->
+        <div class="admin-grid-2" style="margin-bottom:1.5rem;">
+          <!-- Revenue Chart -->
+          <div class="data-table-card">
+            <div class="data-table-header">
+              <div class="data-table-title">📊 Monthly Revenue</div>
+              <div style="font-size:0.8rem; color:var(--text-muted);">Last 6 months</div>
+            </div>
+            <div style="padding:1.5rem;">
+              <div class="chart-container" style="height:260px;">
+                <canvas id="revenueChart"></canvas>
+              </div>
+            </div>
           </div>
-          <div class="table-responsive">
-          <table class="admin-table">
-            <thead><tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
-            <tbody>
-              <?php foreach($recentOrders as $order): ?>
-              <tr>
-                <td><a href="order_detail.php?id=<?= $order['id'] ?>" style="color:var(--primary); text-decoration:none; font-weight:600; font-size:0.8rem;"><?= $order['order_number'] ?></a></td>
-                <td style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><?= htmlspecialchars($order['user_name'] ?? $order['name']) ?></td>
-                <td style="font-weight:700;"><?= formatPrice($order['total']) ?></td>
-                <td><span class="badge badge-<?= $order['order_status'] ?>"><?= ucfirst($order['order_status']) ?></span></td>
-              </tr>
+
+          <!-- Quick Stats -->
+          <div class="data-table-card">
+            <div class="data-table-header">
+              <div class="data-table-title">⚡ Quick Insights</div>
+            </div>
+            <div style="padding:1.5rem;">
+              <?php
+              $qstats = [
+                ['Pending Orders', $pendingOrders, 'badge-pending', 'bi-clock-history', 'var(--warning)'],
+                ['Pending Withdrawals', $pdo->query("SELECT COUNT(*) as c FROM affiliate_withdrawals WHERE status='pending'")->fetch()['c'], 'badge-warning', 'bi-cash-stack', 'var(--gold)'],
+                ['Processing', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='processing'")->fetch()['c'], 'badge-processing', 'bi-gear-wide-connected', 'var(--info)'],
+                ['In Transit', $pdo->query("SELECT COUNT(*) as c FROM orders WHERE order_status='shipped'")->fetch()['c'], 'badge-shipped', 'bi-truck', 'var(--primary)'],
+                ['Low Stock', count($lowStock), 'badge-cancelled', 'bi-exclamation-triangle', 'var(--danger)'],
+              ];
+              foreach ($qstats as $qs):
+                ?>
+                <div
+                  style="display:flex; justify-content:space-between; align-items:center; padding:0.875rem 0; border-bottom:1px solid var(--border);">
+                  <div style="display:flex; align-items:center; gap:0.75rem; font-size:0.875rem; font-weight: 500;">
+                    <div
+                      style="width: 30px; height: 30px; border-radius: 8px; background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center;">
+                      <i class="bi <?= $qs[3] ?>" style="color:<?= $qs[4] ?>;"></i>
+                    </div>
+                    <?= $qs[0] ?>
+                  </div>
+                  <span class="badge <?= $qs[2] ?>"><?= $qs[1] ?></span>
+                </div>
               <?php endforeach; ?>
-              <?php if(empty($recentOrders)): ?>
-              <tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:2rem;">No orders yet</td></tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
+            </div>
           </div>
         </div>
 
-        <!-- Low Stock -->
-        <div class="data-table-card">
-          <div class="data-table-header">
-            <div class="data-table-title">⚠️ Low Stock</div>
-            <a href="products.php" class="btn-primary btn-sm"><i class="bi bi-box-seam"></i> Manage</a>
+        <!-- Recent Orders + Low Stock -->
+        <div class="admin-grid-2">
+          <!-- Recent Orders -->
+          <div class="data-table-card">
+            <div class="data-table-header">
+              <div class="data-table-title">🛒 Recent Orders</div>
+              <a href="orders.php" class="btn-primary btn-sm"><i class="bi bi-arrow-right"></i> View All</a>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($recentOrders as $order): ?>
+                    <tr>
+                      <td><a href="order_detail.php?id=<?= $order['id'] ?>"
+                          style="color:var(--primary); text-decoration:none; font-weight:600; font-size:0.8rem;"><?= $order['order_number'] ?></a>
+                      </td>
+                      <td style="max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        <?= htmlspecialchars($order['user_name'] ?? $order['name']) ?></td>
+                      <td style="font-weight:700;"><?= formatPrice($order['total']) ?></td>
+                      <td><span
+                          class="badge badge-<?= $order['order_status'] ?>"><?= ucfirst($order['order_status']) ?></span>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                  <?php if (empty($recentOrders)): ?>
+                    <tr>
+                      <td colspan="4" style="text-align:center; color:var(--text-muted); padding:2rem;">No orders yet</td>
+                    </tr>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div class="table-responsive">
-          <table class="admin-table">
-            <thead><tr><th>Product</th><th>Stock</th></tr></thead>
-            <tbody>
-              <?php foreach($lowStock as $p): ?>
-              <tr>
-                <td style="font-weight:600;"><?= htmlspecialchars($p['name']) ?></td>
-                <td><span class="badge <?= $p['stock'] <= 0 ? 'badge-cancelled' : 'badge-pending' ?>"><?= $p['stock'] <= 0 ? 'Out of Stock' : $p['stock'].' left' ?></span></td>
-              </tr>
-              <?php endforeach; ?>
-              <?php if(empty($lowStock)): ?>
-              <tr><td colspan="2" style="text-align:center; color:var(--success); padding:2rem;">✓ All stocked!</td></tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
+
+          <!-- Low Stock -->
+          <div class="data-table-card">
+            <div class="data-table-header">
+              <div class="data-table-title">⚠️ Low Stock</div>
+              <a href="products.php" class="btn-primary btn-sm"><i class="bi bi-box-seam"></i> Manage</a>
+            </div>
+            <div class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($lowStock as $p): ?>
+                    <tr>
+                      <td style="font-weight:600;"><?= htmlspecialchars($p['name']) ?></td>
+                      <td><span
+                          class="badge <?= $p['stock'] <= 0 ? 'badge-cancelled' : 'badge-pending' ?>"><?= $p['stock'] <= 0 ? 'Out of Stock' : $p['stock'] . ' left' ?></span>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                  <?php if (empty($lowStock)): ?>
+                    <tr>
+                      <td colspan="2" style="text-align:center; color:var(--success); padding:2rem;">✓ All stocked!</td>
+                    </tr>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
+
       </div>
-
     </div>
   </div>
-</div>
 
-<script>
-// Revenue Chart
-const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-const textColor = isLight ? 'rgba(18,18,37,0.5)' : 'rgba(240,240,255,0.5)';
-const gridColor = isLight ? 'rgba(108,99,255,0.06)' : 'rgba(255,255,255,0.05)';
+  <script>
+    // Revenue Chart
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const textColor = isLight ? 'rgba(18,18,37,0.5)' : 'rgba(240,240,255,0.5)';
+    const gridColor = isLight ? 'rgba(108,99,255,0.06)' : 'rgba(255,255,255,0.05)';
 
-const ctx = document.getElementById('revenueChart').getContext('2d');
-const chartData = <?= json_encode($monthlyData) ?>;
-new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: chartData.map(d => d.month),
-    datasets: [{
-      label: 'Revenue (₹)',
-      data: chartData.map(d => d.revenue),
-      backgroundColor: chartData.map((_,i) => i === 5 ? '#6C63FF' : `rgba(108,99,255,${0.3 + i*0.12})`),
-      borderColor: '#6C63FF',
-      borderWidth: 0,
-      borderRadius: 10,
-      hoverBackgroundColor: '#5A52D5',
-    }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: isLight ? 'rgba(255,255,255,0.98)' : 'rgba(10,10,31,0.98)',
-        borderColor: 'rgba(108,99,255,0.3)',
-        borderWidth: 1,
-        titleColor: isLight ? '#121225' : '#F8F9FF',
-        bodyColor: isLight ? '#666' : 'rgba(248,249,255,0.7)',
-        padding: 12,
-        cornerRadius: 12,
-        callbacks: { label: ctx => '₹' + ctx.parsed.y.toLocaleString() }
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const chartData = <?= json_encode($monthlyData) ?>;
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: chartData.map(d => d.month),
+        datasets: [{
+          label: 'Revenue (₹)',
+          data: chartData.map(d => d.revenue),
+          backgroundColor: chartData.map((_, i) => i === 5 ? '#6C63FF' : `rgba(108,99,255,${0.3 + i * 0.12})`),
+          borderColor: '#6C63FF',
+          borderWidth: 0,
+          borderRadius: 10,
+          hoverBackgroundColor: '#5A52D5',
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isLight ? 'rgba(255,255,255,0.98)' : 'rgba(10,10,31,0.98)',
+            borderColor: 'rgba(108,99,255,0.3)',
+            borderWidth: 1,
+            titleColor: isLight ? '#121225' : '#F8F9FF',
+            bodyColor: isLight ? '#666' : 'rgba(248,249,255,0.7)',
+            padding: 12,
+            cornerRadius: 12,
+            callbacks: { label: ctx => '₹' + ctx.parsed.y.toLocaleString() }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: textColor, font: { weight: 600 } } },
+          y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '₹' + v.toLocaleString() }, beginAtZero: true }
+        }
       }
-    },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: textColor, font: { weight: 600 } } },
-      y: { grid: { color: gridColor }, ticks: { color: textColor, callback: v => '₹' + v.toLocaleString() }, beginAtZero: true }
-    }
-  }
-});
+    });
 
-</script>
+  </script>
 </body>
+
 </html>

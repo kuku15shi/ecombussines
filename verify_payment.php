@@ -29,6 +29,10 @@ if (hash_equals($expectedSignature, $signature)) {
         // Update Order to Paid
         $pdo->prepare("UPDATE orders SET payment_status='paid' WHERE id=?")->execute([$orderId]);
         
+        // Notify Admin of Successful Payment
+        require_once __DIR__ . '/includes/whatsapp_functions.php';
+        sendAdminOrderNotification($orderId);
+        
         // Award affiliate commission
         recordAffiliateCommission($orderId, $order['total']);
 
